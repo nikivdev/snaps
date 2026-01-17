@@ -1,47 +1,159 @@
 // Karabiner key codes
 export type KeyCode =
   // Letters
-  | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m"
-  | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
+  | "a"
+  | "b"
+  | "c"
+  | "d"
+  | "e"
+  | "f"
+  | "g"
+  | "h"
+  | "i"
+  | "j"
+  | "k"
+  | "l"
+  | "m"
+  | "n"
+  | "o"
+  | "p"
+  | "q"
+  | "r"
+  | "s"
+  | "t"
+  | "u"
+  | "v"
+  | "w"
+  | "x"
+  | "y"
+  | "z"
   // Numbers
-  | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "0"
+  | "1"
+  | "2"
+  | "3"
+  | "4"
+  | "5"
+  | "6"
+  | "7"
+  | "8"
+  | "9"
+  | "0"
   // Function keys
-  | "f1" | "f2" | "f3" | "f4" | "f5" | "f6" | "f7" | "f8" | "f9" | "f10" | "f11" | "f12"
+  | "f1"
+  | "f2"
+  | "f3"
+  | "f4"
+  | "f5"
+  | "f6"
+  | "f7"
+  | "f8"
+  | "f9"
+  | "f10"
+  | "f11"
+  | "f12"
   // Modifiers
-  | "left_command" | "right_command" | "left_control" | "right_control"
-  | "left_option" | "right_option" | "left_shift" | "right_shift"
-  | "caps_lock" | "fn"
+  | "left_command"
+  | "right_command"
+  | "left_control"
+  | "right_control"
+  | "left_option"
+  | "right_option"
+  | "left_shift"
+  | "right_shift"
+  | "caps_lock"
+  | "fn"
   // Navigation
-  | "return_or_enter" | "escape" | "delete_or_backspace" | "delete_forward"
-  | "tab" | "spacebar"
-  | "up_arrow" | "down_arrow" | "left_arrow" | "right_arrow"
-  | "page_up" | "page_down" | "home" | "end"
+  | "return_or_enter"
+  | "escape"
+  | "delete_or_backspace"
+  | "delete_forward"
+  | "tab"
+  | "spacebar"
+  | "up_arrow"
+  | "down_arrow"
+  | "left_arrow"
+  | "right_arrow"
+  | "page_up"
+  | "page_down"
+  | "home"
+  | "end"
   // Punctuation
-  | "hyphen" | "equal_sign" | "open_bracket" | "close_bracket" | "backslash"
-  | "non_us_pound" | "semicolon" | "quote" | "grave_accent_and_tilde"
-  | "comma" | "period" | "slash" | "non_us_backslash"
+  | "hyphen"
+  | "equal_sign"
+  | "open_bracket"
+  | "close_bracket"
+  | "backslash"
+  | "non_us_pound"
+  | "semicolon"
+  | "quote"
+  | "grave_accent_and_tilde"
+  | "comma"
+  | "period"
+  | "slash"
+  | "non_us_backslash"
   // Keypad
-  | "keypad_num_lock" | "keypad_slash" | "keypad_asterisk" | "keypad_hyphen"
-  | "keypad_plus" | "keypad_enter" | "keypad_period"
-  | "keypad_0" | "keypad_1" | "keypad_2" | "keypad_3" | "keypad_4"
-  | "keypad_5" | "keypad_6" | "keypad_7" | "keypad_8" | "keypad_9"
+  | "keypad_num_lock"
+  | "keypad_slash"
+  | "keypad_asterisk"
+  | "keypad_hyphen"
+  | "keypad_plus"
+  | "keypad_enter"
+  | "keypad_period"
+  | "keypad_0"
+  | "keypad_1"
+  | "keypad_2"
+  | "keypad_3"
+  | "keypad_4"
+  | "keypad_5"
+  | "keypad_6"
+  | "keypad_7"
+  | "keypad_8"
+  | "keypad_9"
   // Media
-  | "vk_consumer_brightness_down" | "vk_consumer_brightness_up"
-  | "vk_consumer_play" | "vk_consumer_next" | "vk_consumer_previous"
-  | "mute" | "volume_down" | "volume_up" | "volume_increment" | "volume_decrement"
-  | "display_brightness_increment" | "display_brightness_decrement"
-  | "illumination_increment" | "illumination_decrement"
+  | "vk_consumer_brightness_down"
+  | "vk_consumer_brightness_up"
+  | "vk_consumer_play"
+  | "vk_consumer_next"
+  | "vk_consumer_previous"
+  | "mute"
+  | "volume_down"
+  | "volume_up"
+  | "volume_increment"
+  | "volume_decrement"
+  | "display_brightness_increment"
+  | "display_brightness_decrement"
+  | "illumination_increment"
+  | "illumination_decrement"
   // Special
-  | "print_screen" | "scroll_lock" | "pause" | "insert"
-  | "application" | "help" | "power" | "execute" | "menu" | "select" | "stop" | "again" | "undo"
+  | "print_screen"
+  | "scroll_lock"
+  | "pause"
+  | "insert"
+  | "application"
+  | "help"
+  | "power"
+  | "execute"
+  | "menu"
+  | "select"
+  | "stop"
+  | "again"
+  | "undo"
 
 export type Modifier =
-  | "command" | "control" | "option" | "shift"
-  | "left_command" | "right_command"
-  | "left_control" | "right_control"
-  | "left_option" | "right_option"
-  | "left_shift" | "right_shift"
-  | "fn" | "caps_lock"
+  | "command"
+  | "control"
+  | "option"
+  | "shift"
+  | "left_command"
+  | "right_command"
+  | "left_control"
+  | "right_control"
+  | "left_option"
+  | "right_option"
+  | "left_shift"
+  | "right_shift"
+  | "fn"
+  | "caps_lock"
 
 // Profile timing settings
 export interface ProfileSettings {
@@ -132,7 +244,9 @@ export function shell(command: string): { shell: string } {
 }
 
 export function km(macroName: string): { shell: string } {
-  return shell(`osascript -e 'tell application "Keyboard Maestro Engine" to do script "${macroName}"'`)
+  return shell(
+    `osascript -e 'tell application "Keyboard Maestro Engine" to do script "${macroName}"'`,
+  )
 }
 
 export function open(path: string): { shell: string } {
@@ -145,15 +259,75 @@ export function zed(path: string): { shell: string } {
   return shell(`open -a /Applications/Zed.app "${expandedPath}"`)
 }
 
+// todo: should switch to last active window but for this we need to replicate km's tracking
+// or move this to km macro. need fast speed that is just as reliable
+export function zedToggle(path: string): { shell: string } {
+  // Expand ~ to $HOME for shell
+  const expandedPath = path.startsWith("~/") ? `$HOME${path.slice(1)}` : path
+  const title = path.split("/").filter(Boolean).pop() ?? path
+  // Avoid osascript unless Zed is frontmost to keep this close to zed() speed.
+  const titleLines = [
+    `set targetTitle to ${JSON.stringify(title)}`,
+    `set targetPath to ${JSON.stringify(expandedPath)}`,
+    `tell application "System Events"`,
+    `  set frontTitle to ""`,
+    `  try`,
+    `    set frontTitle to name of front window of process "Zed"`,
+    `  end try`,
+    `  if frontTitle starts with targetTitle then`,
+    `    key code 48 using {command down}`,
+    `    return`,
+    `  end if`,
+    `end tell`,
+    `do shell script "open -a /Applications/Zed.app " & quoted form of targetPath`,
+  ]
+  const titleScript = titleLines
+    .map((line) => `-e ${JSON.stringify(line)}`)
+    .join(" ")
+  const cmd = [
+    `frontApp=$(lsappinfo info -only kCFBundleNameKey -app "$(lsappinfo front | awk '{print $1}')" | awk -F'"' '{print $4}')`,
+    `if [ "$frontApp" != "Zed" ]; then open -a /Applications/Zed.app "${expandedPath}"; exit 0; fi`,
+    `osascript ${titleScript}`,
+  ].join("; ")
+  return shell(cmd)
+}
+
 export function openUrl(url: string): { shell: string } {
   return shell(`open "${url}"`)
 }
 
-export function alfred(workflow: string, trigger: string, arg?: string): { shell: string } {
+export function alfred(
+  workflow: string,
+  trigger: string,
+  arg?: string,
+): { shell: string } {
   const argPart = arg ? ` with argument "${arg}"` : ""
-  return shell(`osascript -e 'tell application id "com.runningwithcrayons.Alfred" to run trigger "${trigger}" in workflow "${workflow}"${argPart}'`)
+  return shell(
+    `osascript -e 'tell application id "com.runningwithcrayons.Alfred" to run trigger "${trigger}" in workflow "${workflow}"${argPart}'`,
+  )
 }
 
 export function raycast(extension: string): { shell: string } {
   return shell(`open -g "raycast://extensions/${extension}"`)
+}
+
+export function linWidget(
+  tsPath: string,
+  options?: {
+    ttlMs?: number
+  },
+): { shell: string } {
+  const expandedPath = tsPath.startsWith("~/") ? `$HOME${tsPath.slice(1)}` : tsPath
+  const runnerPath = "$HOME/config/i/kar/scripts/lin-widget-run.sh"
+  const logFile = "$HOME/Library/Logs/Lin/widget.log"
+  const quotedPath = JSON.stringify(expandedPath)
+  const quotedRunner = JSON.stringify(runnerPath)
+  const quotedLog = JSON.stringify(logFile)
+  const ttlMs = options?.ttlMs ?? 0
+  const pipeline = [
+    `log_file=${quotedLog}; mkdir -p \"$(dirname \\\"$log_file\\\")\";`,
+    ttlMs > 0 ? `export LIN_WIDGET_TTL_MS=${ttlMs};` : "",
+    `exec ${quotedRunner} ${quotedPath}`,
+  ].filter(Boolean).join(" ")
+  return shell(`bash -lc ${JSON.stringify(pipeline)}`)
 }

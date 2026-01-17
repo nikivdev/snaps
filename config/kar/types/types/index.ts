@@ -74,12 +74,16 @@ export interface MouseKey {
   speed_multiplier?: number
 }
 
+// Pointing button (mouse click)
+export type PointingButton = "button1" | "button2" | "button3"
+
 // To key specification
 export type ToKey =
   | KeyCode
   | { key: KeyCode; modifiers?: Modifier | Modifier[] }
   | { shell: string }
   | { mouse_key: MouseKey }
+  | { pointing_button: PointingButton }
   | ToKey[] // Multiple actions
 
 // Condition for when a rule applies
@@ -136,7 +140,9 @@ export function open(path: string): { shell: string } {
 }
 
 export function zed(path: string): { shell: string } {
-  return shell(`open -a /Applications/Zed.app "${path}"`)
+  // Expand ~ to $HOME for shell
+  const expandedPath = path.startsWith("~/") ? `$HOME${path.slice(1)}` : path
+  return shell(`open -a /Applications/Zed.app "${expandedPath}"`)
 }
 
 export function openUrl(url: string): { shell: string } {
@@ -150,4 +156,25 @@ export function alfred(workflow: string, trigger: string, arg?: string): { shell
 
 export function raycast(extension: string): { shell: string } {
   return shell(`open -g "raycast://extensions/${extension}"`)
+}
+
+export function linWidget(
+  tsPath: string,
+  options?: {
+    ttlMs?: number
+  },
+): { shell: string } {
+  const expandedPath = tsPath.startsWith("~/") ? `$HOME${tsPath.slice(1)}` : tsPath
+  const runnerPath = "$HOME/config/i/kar/scripts/lin-widget-run.sh"
+  const logFile = "$HOME/Library/Logs/Lin/widget.log"
+  const quotedPath = JSON.stringify(expandedPath)
+  const quotedRunner = JSON.stringify(runnerPath)
+  const quotedLog = JSON.stringify(logFile)
+  const ttlMs = options?.ttlMs ?? 0
+  const pipeline = [
+    `log_file=${quotedLog}; mkdir -p \"$(dirname \\\"$log_file\\\")\";`,
+    ttlMs > 0 ? `export LIN_WIDGET_TTL_MS=${ttlMs};` : "",
+    `exec ${quotedRunner} ${quotedPath}`,
+  ].filter(Boolean).join(" ")
+  return shell(`bash -lc ${JSON.stringify(pipeline)}`)
 }
