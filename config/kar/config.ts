@@ -1030,8 +1030,11 @@ export default {
         { from: "i", to: { key: "keypad_hyphen", modifiers: "left_command" } },
         { from: "o", to: { key: "keypad_plus", modifiers: "left_command" } },
         { from: "escape", to: "display_brightness_increment" },
-        { from: "a", to: km("arc: grok.com") },
-        { from: "s", to: km("Selection -> Claude") },
+        {
+          from: "a",
+          to: { key: "9", modifiers: ["left_command", "left_control"] },
+        },
+        { from: "s", to: alfred("nikiv.dev.flow", "current_windows_of_app") },
         {
           from: "f",
           to: { key: "return_or_enter", modifiers: "left_command" },
@@ -1051,10 +1054,7 @@ export default {
             modifiers: ["left_control", "left_option", "left_shift"],
           },
         },
-        {
-          from: "spacebar",
-          to: { key: "9", modifiers: ["left_command", "left_control"] },
-        },
+        { from: "spacebar", to: km("Selection -> Claude") },
       ],
     },
 
@@ -1107,7 +1107,7 @@ export default {
             modifiers: ["left_control", "left_option", "left_command"],
           },
         },
-        { from: "n", to: km("arc: railway.com") },
+        { from: "n", to: km("arc: grok.com") },
         { from: "m", to: km("arc: aistudio.google.com") },
         { from: "period", to: km("open: ChatGPT") },
         { from: "grave_accent_and_tilde", to: km("open: Chrome Canary") },
@@ -1223,8 +1223,9 @@ export default {
       layer: "escape-mode",
       mappings: [
         { from: "q", to: km("arc: console.groq.com") },
-        { from: "w", to: km("arc: hetzner.com") },
+        { from: "w", to: km("arc: railway.com") },
         { from: "e", to: km("arc: maps.google.com") },
+        { from: "r", to: km("arc: hetzner.com") },
         { from: "i", to: km("arc: openrouter.ai") },
         { from: "o", to: km("arc: lovable.dev") },
         { from: "r", to: km("arc: resend.com") },
@@ -1330,7 +1331,7 @@ export default {
         { from: "escape", to: zed("~/repos/tarantool/tarantool") },
         { from: "a", to: zed("~/repos/reatom/reatom") },
         { from: "s", to: zed("~/code/lang/swift") },
-        { from: "d", to: zed("~/repos/garden-co/jazz2") },
+        { from: "d", to: zed("~/repos/0xPlaygrounds/rig") },
         { from: "j", to: zed("~/code/lang/ts") },
         { from: "k", to: zed("~/code/lang/mbt") },
         { from: "l", to: zed("~/code/lang/py") },
@@ -1378,9 +1379,8 @@ export default {
         { from: "o", to: zed("~/code/org/gitedit/gitedit") },
         { from: "a", to: zed("~/code/org/la/la") },
         { from: "s", to: zed("~/code/org/gen/new") },
-        { from: "d", to: zed("~/code/ai") },
+        { from: "d", to: zed("~/repos/garden-co/jazz2") },
         { from: "f", to: zed("~/code/org/1f/1f") },
-        { from: "h", to: zed("~/code/org/sb/sb") },
         {
           from: "j",
           to: alfred("nikiv.dev.flow", "code"),
@@ -1397,13 +1397,14 @@ export default {
         { from: "b", to: zed("~/code/x/db") },
         { from: "n", to: zed("~/code/zerg") },
         { from: "m", to: zed("~/code/org/linsa/lin") },
+        { from: "w", to: zed("~/code/alfred") },
         { from: "period", to: zed("~/code/myflow") },
-        { from: "spacebar", to: zed("~/repos/0xPlaygrounds/rig") },
+        { from: "slash", to: zed("~/code/org/sb/sb") },
+        { from: "spacebar", to: zed("~/code/ai") },
       ],
       // { from: "left_command", to: zed("~/code/org/1f/sdk") },
       // { from: "h", to: zed("~/code/org/gen/train") },
       // { from: "i", to: zed("~/repos/cloudflare/agents") },
-      // { from: "o", to: zed("~/repos/agno-agi/agno") },
       // { from: "n", to: km("warp: lin") },
       // { from: "semicolon", to: km("warp: flow") },
       // { from: "n", to: zed("~/") },
@@ -1446,20 +1447,20 @@ export default {
           from: "j",
           to: linWidget("~/config/i/kar/widgets/sf-time.ts", { ttlMs: 2000 }),
         },
-        // todo: fix
-        {
-          from: "k",
-          to: alfred(
-            "list_windows_of_active_app",
-            "com.alfredapp.vitor.windowswitcher",
-          ),
-        },
         {
           from: "semicolon",
           to: km("paste url of currently playing spotify song"),
         },
         { from: "period", to: km("paste currently playing spotify song") },
       ],
+      // stopped working so we made our own todo: remove
+      // {
+      //   from: "k",
+      //   to: alfred(
+      //     "list_windows_of_active_app",
+      //     "com.alfredapp.vitor.windowswitcher",
+      //   ),
+      // },
     },
 
     {
@@ -1519,6 +1520,7 @@ export default {
         { from: "grave_accent_and_tilde", to: zed("~/repos/banteg/takopi") },
         { from: "z", to: zed("~/repos/HazelChat/hazel") },
         { from: "c", to: zed("~/repos/wannabespace/conar") },
+        { from: "v", to: zed("~/repos/agno-agi/agno") },
         { from: "spacebar", to: zed("~/repos/openai/codex") },
       ],
       // { from: "w", to: km("zed: verifiers") },
