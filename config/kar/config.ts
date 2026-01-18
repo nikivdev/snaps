@@ -1365,43 +1365,6 @@ export default {
       // { from: "f", to: km("warp: 1f-vscode") },
       // { from: "u", to: km("warp: elixir") },
       // { from: "tab", to: km("warp: cpp") },
-    },
-
-    // v-mode: search
-    {
-      description: "vkey ()",
-      layer: "v-mode",
-      mappings: [
-        { from: "w", to: zed("~/repos/raycast/extensions") },
-        { from: "e", to: zed("~/code/1f/glide") },
-        { from: "r", to: zed("~/code/friendik") },
-        { from: "i", to: zed("~/code/infra") },
-        { from: "o", to: zed("~/code/org/gitedit/gitedit") },
-        { from: "a", to: zed("~/code/org/la/la") },
-        { from: "s", to: zed("~/code/org/gen/new") },
-        { from: "d", to: zed("~/repos/garden-co/jazz2") },
-        { from: "f", to: zed("~/code/org/1f/1f") },
-        {
-          from: "j",
-          to: alfred("nikiv.dev.flow", "code"),
-        },
-        {
-          from: "k",
-          to: alfred("nikiv.dev.flow", "repos"),
-        },
-        { from: "l", to: zed("~/code/org/linsa/linsa") },
-        { from: "semicolon", to: zed("~/code/flow") },
-        { from: "grave_accent_and_tilde", to: zed("~/code/telegram") },
-        { from: "z", to: zed("~/code/alfred") },
-        { from: "x", to: zed("~/code/x") },
-        { from: "b", to: zed("~/code/x/db") },
-        { from: "n", to: zed("~/code/zerg") },
-        { from: "m", to: zed("~/code/org/linsa/lin") },
-        { from: "w", to: zed("~/code/alfred") },
-        { from: "period", to: zed("~/code/myflow") },
-        { from: "slash", to: zed("~/code/org/sb/sb") },
-        { from: "spacebar", to: zed("~/code/ai") },
-      ],
       // { from: "left_command", to: zed("~/code/org/1f/sdk") },
       // { from: "h", to: zed("~/code/org/gen/train") },
       // { from: "i", to: zed("~/repos/cloudflare/agents") },
@@ -1435,6 +1398,44 @@ export default {
       // { from: "left_command", to: km("zed: swift") },
       // { from: "spacebar", to: km("zed: x") },
       // { from: "right_command", to: km("zed: mojo") },
+    },
+
+    // v-mode: search
+    {
+      description: "vkey ()",
+      layer: "v-mode",
+      mappings: [
+        { from: "q", to: zed("~/repos/raycast/extensions") }, // todo: make it ~/code/raycast with /ext/raycast
+        { from: "w", to: zed("~/code/1f/glide") },
+        { from: "e", to: zed("~/code/alfred") },
+        { from: "r", to: zed("~/code/friendik") },
+        { from: "i", to: zed("~/code/infra") },
+        { from: "o", to: zed("~/code/org/gitedit/gitedit") },
+        { from: "escape", to: zed("~/code/org/la/la") },
+        { from: "a", to: zed("~/code/org/1f/rise") },
+        { from: "s", to: zed("~/code/org/gen/new") },
+        { from: "d", to: zed("~/docs") },
+        { from: "f", to: zed("~/code/org/1f/1f") },
+        {
+          from: "j",
+          to: alfred("nikiv.dev.flow", "code"),
+        },
+        {
+          from: "k",
+          to: alfred("nikiv.dev.flow", "repos"),
+        },
+        { from: "l", to: zed("~/code/org/linsa/linsa") },
+        { from: "semicolon", to: zed("~/code/flow") },
+        { from: "grave_accent_and_tilde", to: zed("~/code/telegram") },
+        { from: "z", to: zed("~/code/org/1f/jazz") },
+        { from: "x", to: zed("~/code/x") },
+        { from: "b", to: zed("~/code/x/db") },
+        { from: "n", to: zed("~/code/zerg") },
+        { from: "m", to: zed("~/code/org/linsa/lin") },
+        { from: "period", to: zed("~/code/myflow") },
+        { from: "slash", to: zed("~/code/org/sb/sb") },
+        { from: "spacebar", to: zed("~/code/ai") },
+      ],
     },
 
     // b-mode: editing
