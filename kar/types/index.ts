@@ -200,12 +200,18 @@ export interface SocketCommand {
   command: string
 }
 
+export interface SendUserCommand {
+  payload: unknown
+  endpoint?: string
+}
+
 // To key specification
 export type ToKey =
   | KeyCode
   | { key: KeyCode; modifiers?: Modifier | Modifier[] }
   | { shell: string }
   | { socket_command: SocketCommand }
+  | { send_user_command: SendUserCommand }
   | { mouse_key: MouseKey }
   | { pointing_button: PointingButton }
   | ToKey[] // Multiple actions
@@ -259,8 +265,24 @@ export function socketCommand(endpoint: string, command: string): { socket_comma
   return { socket_command: { endpoint, command } }
 }
 
-export function seqSocket(macroName: string, endpoint = "/tmp/seqd.sock"): { socket_command: SocketCommand } {
-  return socketCommand(endpoint, `RUN ${macroName}`)
+export function sendUserCommand(payload: unknown, endpoint?: string): { send_user_command: SendUserCommand } {
+  if (endpoint) {
+    return { send_user_command: { payload, endpoint } }
+  }
+  return { send_user_command: { payload } }
+}
+
+// Karabiner 15.9.15+ low-latency path.
+// We keep the function name for config compatibility, but it now emits send_user_command.
+export function seqSocket(macroName: string, endpoint?: string): { send_user_command: SendUserCommand } {
+  return sendUserCommand(
+    {
+      v: 1,
+      type: "run",
+      name: macroName,
+    },
+    endpoint,
+  )
 }
 
 export function km(macroName: string): { shell: string } {
@@ -297,7 +319,16 @@ function seqStepsToInlineYaml(macroName: string, steps: unknown[]): string | nul
     if (!s || typeof s !== "object") continue
     const any = s as any
 
-    // openAppFast("Arc") => { socket_command: { endpoint: "/tmp/seqd.sock", command: "RUN open-app-toggle:Arc" } }
+    // openApp("Arc") => { send_user_command: { payload: { v:1, type:"open_app_toggle", app:"Arc" } } }
+    if (any.send_user_command && any.send_user_command.payload) {
+      const p = any.send_user_command.payload
+      if (p && typeof p === "object" && typeof p.type === "string" && p.type === "open_app_toggle" && typeof p.app === "string") {
+        out.push({ action: "open_app", arg: p.app })
+        continue
+      }
+    }
+
+    // Legacy (pre-15.9.15): openAppFast("Arc") => { socket_command: { endpoint: "/tmp/seqd.sock", command: "RUN open-app-toggle:Arc" } }
     if (any.socket_command && typeof any.socket_command.command === "string") {
       const m = any.socket_command.command.match(/^RUN open-app-toggle:(.+)$/)
       if (m) {
@@ -454,44 +485,47 @@ export function open(path: string): { shell: string } {
   return shell(`open "${path}"`)
 }
 
-export function openAppFast(app: string): { socket_command: SocketCommand } {
-  // Expand "~" at config-build time so callers can pass "~/.../Foo.app".
-  const home = process.env.HOME ?? "$HOME"
-  const expandedApp =
-    app === "~" ? home : app.startsWith("~/") ? `${home}${app.slice(1)}` : app
-  return seqSocket(`open-app-toggle:${expandedApp}`)
-}
-
-export function openApp(app: string): { shell: string } {
-  const seqBin = "/Users/nikiv/code/seq/cli/cpp/out/bin/seq"
-
+export function openAppFast(app: string): { send_user_command: SendUserCommand } {
   // Expand "~" at config-build time so callers can pass "~/.../Foo.app".
   const home = process.env.HOME ?? "$HOME"
   const expandedApp =
     app === "~" ? home : app.startsWith("~/") ? `${home}${app.slice(1)}` : app
 
-  const appArg = JSON.stringify(expandedApp)
-  const cmd = [
-    `if [ -x "${seqBin}" ]; then`,
-    `  "${seqBin}" open-app-toggle ${appArg} >/dev/null 2>&1 && exit 0;`,
-    `fi;`,
-    `open -a ${appArg}`,
-  ].join(" ")
-  return shell(cmd)
+  return sendUserCommand({
+    v: 1,
+    type: "open_app_toggle",
+    app: expandedApp,
+  })
 }
 
-export function zed(path: string): { shell: string } {
-  // Expand ~ to $HOME for shell
-  const expandedPath = path.startsWith("~/") ? `$HOME${path.slice(1)}` : path
-  return shell(`open -a "/System/Volumes/Data/Applications/Zed Preview.app" "${expandedPath}"`)
+export function openApp(app: string): { send_user_command: SendUserCommand } {
+  // Expand "~" at config-build time so callers can pass "~/.../Foo.app".
+  const home = process.env.HOME ?? "$HOME"
+  const expandedApp =
+    app === "~" ? home : app.startsWith("~/") ? `${home}${app.slice(1)}` : app
+
+  // Karabiner 15.9.15+ path: send JSON payload to user-command receiver.
+  // Lowest-latency path avoids /bin/sh and seq process spawning.
+  return sendUserCommand({
+    v: 1,
+    type: "open_app_toggle",
+    app: expandedApp,
+  })
 }
 
-// Fast version using socket_command → seqd OPEN_WITH_APP (no fork+exec).
-export function zedFast(path: string): { socket_command: SocketCommand } {
+export function zed(path: string): { send_user_command: SendUserCommand } {
+  // Expand "~" at config-build time for non-shell payloads.
   const home = process.env.HOME ?? "$HOME"
   const expandedPath = path === "~" ? home : path.startsWith("~/") ? `${home}${path.slice(1)}` : path
   const appPath = "/System/Volumes/Data/Applications/Zed Preview.app"
-  return socketCommand("/tmp/seqd.sock", `OPEN_WITH_APP ${appPath}:${expandedPath}`)
+  return sendUserCommand({
+    line: `OPEN_WITH_APP ${appPath}:${expandedPath}`,
+  })
+}
+
+// Alias for compatibility with older callsites.
+export function zedFast(path: string): { send_user_command: SendUserCommand } {
+  return zed(path)
 }
 
 // todo: should switch to last active window but for this we need to replicate km's tracking

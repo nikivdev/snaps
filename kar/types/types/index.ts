@@ -84,12 +84,18 @@ export interface SocketCommand {
   command: string
 }
 
+export interface SendUserCommand {
+  payload: unknown
+  endpoint?: string
+}
+
 // To key specification
 export type ToKey =
   | KeyCode
   | { key: KeyCode; modifiers?: Modifier | Modifier[] }
   | { shell: string }
   | { socket_command: SocketCommand }
+  | { send_user_command: SendUserCommand }
   | { mouse_key: MouseKey }
   | { pointing_button: PointingButton }
   | ToKey[] // Multiple actions
@@ -143,8 +149,24 @@ export function socketCommand(endpoint: string, command: string): { socket_comma
   return { socket_command: { endpoint, command } }
 }
 
-export function seqSocket(macroName: string, endpoint = "/tmp/seqd.sock"): { socket_command: SocketCommand } {
-  return socketCommand(endpoint, `RUN ${macroName}`)
+export function sendUserCommand(payload: unknown, endpoint?: string): { send_user_command: SendUserCommand } {
+  if (endpoint) {
+    return { send_user_command: { payload, endpoint } }
+  }
+  return { send_user_command: { payload } }
+}
+
+// Karabiner 15.9.15+ low-latency path.
+// We keep the function name for config compatibility, but it now emits send_user_command.
+export function seqSocket(macroName: string, endpoint?: string): { send_user_command: SendUserCommand } {
+  return sendUserCommand(
+    {
+      v: 1,
+      type: "run",
+      name: macroName,
+    },
+    endpoint,
+  )
 }
 
 // Kept in sync with `../index.ts` for editor type-checking when importing from
@@ -156,6 +178,14 @@ function seqStepsToInlineYaml(macroName: string, steps: unknown[]): string | nul
   for (const s of steps) {
     if (!s || typeof s !== "object") continue
     const any = s as any
+
+    if (any.send_user_command && any.send_user_command.payload) {
+      const p = any.send_user_command.payload
+      if (p && typeof p === "object" && typeof p.type === "string" && p.type === "open_app_toggle" && typeof p.app === "string") {
+        out.push({ action: "open_app", arg: p.app })
+        continue
+      }
+    }
 
     if (typeof any.shell === "string") {
       const m = any.shell.match(/\\bopen-app-toggle\\s+\"([^\"]+)\"/)
@@ -300,10 +330,14 @@ export function open(path: string): { shell: string } {
   return shell(`open "${path}"`)
 }
 
-export function zed(path: string): { shell: string } {
-  // Expand ~ to $HOME for shell
-  const expandedPath = path.startsWith("~/") ? `$HOME${path.slice(1)}` : path
-  return shell(`open -a /Applications/Zed.app "${expandedPath}"`)
+export function zed(path: string): { send_user_command: SendUserCommand } {
+  // Expand "~" at config-build time for non-shell payloads.
+  const home = process.env.HOME ?? "$HOME"
+  const expandedPath = path === "~" ? home : path.startsWith("~/") ? `${home}${path.slice(1)}` : path
+  const appPath = "/Applications/Zed.app"
+  return sendUserCommand({
+    line: `OPEN_WITH_APP ${appPath}:${expandedPath}`,
+  })
 }
 
 export function openUrl(url: string): { shell: string } {
