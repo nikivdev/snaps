@@ -661,7 +661,8 @@ export default {
         { from: "d", to: openApp("Fantastical") },
         { from: "f", to: openApp("Things") },
         { from: "h", to: openApp("Proxyman") },
-        { from: "j", to: openApp("Ghostty") },
+        // Legacy path for A/B latency comparison (shell -> open -a).
+        { from: "j", to: shell(`open -a ${JSON.stringify("Ghostty")}`) },
         { from: "k", to: openApp("Safari") },
         { from: "l", to: openApp("Zed Preview") },
         { from: "semicolon", to: openApp("Cursor") },

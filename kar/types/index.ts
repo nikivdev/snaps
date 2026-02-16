@@ -319,10 +319,16 @@ function seqStepsToInlineYaml(macroName: string, steps: unknown[]): string | nul
     if (!s || typeof s !== "object") continue
     const any = s as any
 
-    // openApp("Arc") => { send_user_command: { payload: { v:1, type:"open_app_toggle", app:"Arc" } } }
+    // openApp("Arc") => { send_user_command: { payload: { v:1, type:"open_app", app:"Arc" } } }
     if (any.send_user_command && any.send_user_command.payload) {
       const p = any.send_user_command.payload
-      if (p && typeof p === "object" && typeof p.type === "string" && p.type === "open_app_toggle" && typeof p.app === "string") {
+      if (
+        p &&
+        typeof p === "object" &&
+        typeof p.type === "string" &&
+        (p.type === "open_app" || p.type === "open_app_toggle") &&
+        typeof p.app === "string"
+      ) {
         out.push({ action: "open_app", arg: p.app })
         continue
       }
@@ -493,7 +499,7 @@ export function openAppFast(app: string): { send_user_command: SendUserCommand }
 
   return sendUserCommand({
     v: 1,
-    type: "open_app_toggle",
+    type: "open_app",
     app: expandedApp,
   })
 }
@@ -505,12 +511,28 @@ export function openApp(app: string): { send_user_command: SendUserCommand } {
     app === "~" ? home : app.startsWith("~/") ? `${home}${app.slice(1)}` : app
 
   // Karabiner 15.9.15+ path: send JSON payload to user-command receiver.
-  // Lowest-latency path avoids /bin/sh and seq process spawning.
+  // Lowest-latency deterministic path avoids /bin/sh and seq process spawning.
+  // Uses non-toggle open behavior for maximal responsiveness.
+  return sendUserCommand({
+    v: 1,
+    type: "open_app",
+    app: expandedApp,
+  })
+}
+
+export function openAppToggle(app: string): { send_user_command: SendUserCommand } {
+  const home = process.env.HOME ?? "$HOME"
+  const expandedApp =
+    app === "~" ? home : app.startsWith("~/") ? `${home}${app.slice(1)}` : app
   return sendUserCommand({
     v: 1,
     type: "open_app_toggle",
     app: expandedApp,
   })
+}
+
+export function openAppToggleFast(app: string): { send_user_command: SendUserCommand } {
+  return openAppToggle(app)
 }
 
 export function zed(path: string): { send_user_command: SendUserCommand } {
