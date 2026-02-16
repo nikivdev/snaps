@@ -1175,7 +1175,10 @@ export default {
         },
         { from: "u", to: seqSocket("telegram: log") },
         { from: "i", to: seqSocket("telegram: nikivdev") },
-        { from: "o", to: seqSocket("X Feed (in Arc)") },
+        {
+          from: "o",
+          to: [openApp("Arc"), keystroke("ctrl+1"), keystroke("cmd+6")],
+        },
         {
           from: "z",
           to: {
@@ -2246,7 +2249,10 @@ export default {
         { from: "t", to: openUrlInApp("https://github.com/nikivdev", "Safari") },
         { from: "i", to: openApp("Reader") },
         // { from: "o", to: openApp("X Feed (in Arc)") },
-        { from: "o", to: seqSocket("X Feed (in Arc)") },
+        {
+          from: "o",
+          to: [openApp("Arc"), keystroke("ctrl+1"), keystroke("cmd+6")],
+        },
         { from: "p", to: openApp("X profile (in Arc)") },
         { from: "a", to: openApp("Safari Technology Preview") },
         { from: "s", to: openApp("Arc") },

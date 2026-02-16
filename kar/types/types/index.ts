@@ -345,8 +345,9 @@ export function openUrl(url: string): { shell: string } {
 }
 
 export function alfred(workflow: string, trigger: string, arg?: string): { shell: string } {
-  const argPart = arg ? ` with argument "${arg}"` : ""
-  return shell(`osascript -e 'tell application id "com.runningwithcrayons.Alfred" to run trigger "${trigger}" in workflow "${workflow}"${argPart}'`)
+  const base = `alfred://runtrigger/${encodeURIComponent(workflow)}/${encodeURIComponent(trigger)}/`
+  const url = arg ? `${base}?argument=${encodeURIComponent(arg)}` : base
+  return shell(`open -g "${url}"`)
 }
 
 export function raycast(extension: string): { shell: string } {
