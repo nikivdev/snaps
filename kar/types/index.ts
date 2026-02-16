@@ -272,9 +272,134 @@ export function sendUserCommand(payload: unknown, endpoint?: string): { send_use
   return { send_user_command: { payload } }
 }
 
+type SeqMacroMeta = {
+  action: string
+  arg?: string
+  app?: string
+}
+
+let seqMacroIndexCache: Map<string, SeqMacroMeta> | null | undefined
+
+function parseYamlScalar(raw: string): string {
+  const value = raw.trim()
+  if (!value) return ""
+  if (value.startsWith("\"") && value.endsWith("\"")) {
+    try {
+      return JSON.parse(value)
+    } catch {
+      return value.slice(1, -1)
+    }
+  }
+  if (value.startsWith("'") && value.endsWith("'")) {
+    return value.slice(1, -1)
+  }
+  return value
+}
+
+function getSeqMacroIndex(): Map<string, SeqMacroMeta> | null {
+  if (seqMacroIndexCache !== undefined) {
+    return seqMacroIndexCache
+  }
+
+  const macrosPath = process.env.SEQ_MACROS_PATH ?? "/Users/nikiv/code/seq/seq.macros.yaml"
+  try {
+    const deno = (globalThis as { Deno?: { readTextFileSync?: (path: string) => string } }).Deno
+    if (!deno || typeof deno.readTextFileSync !== "function") {
+      seqMacroIndexCache = null
+      return null
+    }
+    const text = deno.readTextFileSync(macrosPath)
+    const map = new Map<string, SeqMacroMeta>()
+
+    let currentName = ""
+    let currentAction = ""
+    let currentArg: string | undefined
+    let currentApp: string | undefined
+
+    const flush = () => {
+      if (currentName && currentAction) {
+        map.set(currentName, {
+          action: currentAction,
+          arg: currentArg,
+          app: currentApp,
+        })
+      }
+      currentName = ""
+      currentAction = ""
+      currentArg = undefined
+      currentApp = undefined
+    }
+
+    for (const line of text.split(/\r?\n/)) {
+      if (line.startsWith("- name:")) {
+        flush()
+        currentName = parseYamlScalar(line.slice("- name:".length))
+        continue
+      }
+      if (!currentName) continue
+
+      if (line.startsWith("  action:")) {
+        currentAction = parseYamlScalar(line.slice("  action:".length))
+        continue
+      }
+      if (line.startsWith("  arg:")) {
+        currentArg = parseYamlScalar(line.slice("  arg:".length))
+        continue
+      }
+      if (line.startsWith("  app:")) {
+        currentApp = parseYamlScalar(line.slice("  app:".length))
+        continue
+      }
+    }
+
+    flush()
+    seqMacroIndexCache = map
+    return map
+  } catch {
+    seqMacroIndexCache = null
+    return null
+  }
+}
+
+function directPayloadForSeqMacro(macroName: string): unknown | null {
+  const index = getSeqMacroIndex()
+  if (!index) return null
+
+  const meta = index.get(macroName)
+  if (!meta) return null
+
+  // Fast-path only URL-open macros. Everything else keeps current seqd behavior.
+  if (meta.action !== "open_url" || !meta.arg) {
+    return null
+  }
+
+  if (meta.app) {
+    return { line: `OPEN_WITH_APP ${meta.app}:${meta.arg}` }
+  }
+  return {
+    v: 1,
+    type: "open",
+    target: meta.arg,
+  }
+}
+
 // Karabiner 15.9.15+ low-latency path.
 // We keep the function name for config compatibility, but it now emits send_user_command.
-export function seqSocket(macroName: string, endpoint?: string): { send_user_command: SendUserCommand } {
+export function seqSocket(
+  macroName: string,
+  endpoint?: string,
+  opts?: {
+    directOpenUrl?: boolean
+  },
+): { send_user_command: SendUserCommand } {
+  const useDirectOpenUrl = opts?.directOpenUrl ?? true
+  if (useDirectOpenUrl) {
+    const directPayload = directPayloadForSeqMacro(macroName)
+    if (directPayload) {
+      return sendUserCommand(directPayload, endpoint)
+    }
+  }
+
   return sendUserCommand(
     {
       v: 1,
@@ -285,7 +410,15 @@ export function seqSocket(macroName: string, endpoint?: string): { send_user_com
   )
 }
 
-export function km(macroName: string): { shell: string } {
+export function seqSocketFast(macroName: string, endpoint?: string): { send_user_command: SendUserCommand } {
+  return seqSocket(macroName, endpoint, { directOpenUrl: true })
+}
+
+export function kmFast(macroName: string, endpoint?: string): { send_user_command: SendUserCommand } {
+  return seqSocket(macroName, endpoint)
+}
+
+export function kmShell(macroName: string): { shell: string } {
   const seqBin = "/Users/nikiv/code/seq/cli/cpp/out/bin/seq"
   const seqCmd = `"${seqBin}" run ${JSON.stringify(macroName)}`
   const kmCmd = `osascript -e ${JSON.stringify(
@@ -303,6 +436,10 @@ export function km(macroName: string): { shell: string } {
   ].join(" ")
 
   return shell(cmd)
+}
+
+export function km(macroName: string): { send_user_command: SendUserCommand } {
+  return kmFast(macroName)
 }
 
 function seqStepsToInlineYaml(macroName: string, steps: unknown[]): string | null {
@@ -487,8 +624,17 @@ export function keystroke(keys: string): KeyMapping {
   return { key, modifiers: mods }
 }
 
-export function open(path: string): { shell: string } {
-  return shell(`open "${path}"`)
+function expandHome(path: string): string {
+  const home = process.env.HOME ?? "$HOME"
+  return path === "~" ? home : path.startsWith("~/") ? `${home}${path.slice(1)}` : path
+}
+
+export function open(path: string): { send_user_command: SendUserCommand } {
+  return sendUserCommand({
+    v: 1,
+    type: "open",
+    target: expandHome(path),
+  })
 }
 
 export function openAppFast(app: string): { send_user_command: SendUserCommand } {
@@ -583,8 +729,48 @@ export function zedToggle(path: string): { shell: string } {
   return shell(cmd)
 }
 
-export function openUrl(url: string): { shell: string } {
-  return shell(`open "${url}"`)
+export function openUrl(
+  url: string,
+  opts?: {
+    background?: boolean
+  },
+): { send_user_command: SendUserCommand } {
+  return sendUserCommand({
+    v: 1,
+    type: "open",
+    background: opts?.background ?? false,
+    target: url,
+  })
+}
+
+export function openUrlInApp(url: string, app: string): { send_user_command: SendUserCommand } {
+  return sendUserCommand({
+    line: `OPEN_WITH_APP ${app}:${url}`,
+  })
+}
+
+export function seqAgentFromClipboard(endpoint?: string): { send_user_command: SendUserCommand } {
+  return sendUserCommand(
+    {
+      v: 1,
+      type: "seq_agent_clipboard",
+    },
+    endpoint,
+  )
+}
+
+export function seqScreenshotOpen(
+  path = "/tmp/seq_screenshot.png",
+  endpoint?: string,
+): { send_user_command: SendUserCommand } {
+  return sendUserCommand(
+    {
+      v: 1,
+      type: "seq_screenshot_open",
+      path: expandHome(path),
+    },
+    endpoint,
+  )
 }
 
 export function alfred(
@@ -598,8 +784,13 @@ export function alfred(
   )
 }
 
-export function raycast(extension: string): { shell: string } {
-  return shell(`open -g "raycast://extensions/${extension}"`)
+export function raycast(extension: string): { send_user_command: SendUserCommand } {
+  return sendUserCommand({
+    v: 1,
+    type: "open",
+    background: true,
+    target: `raycast://extensions/${extension}`,
+  })
 }
 
 export function linWidget(

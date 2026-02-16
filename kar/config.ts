@@ -1,7 +1,21 @@
 import type { Config } from "./types/index.ts"
-import { km, raycast, alfred, shell, zed, linWidget, openApp, seq, seqSocket, keystroke } from "./types/index.ts"
+import {
+  km,
+  raycast,
+  alfred,
+  shell,
+  zed,
+  linWidget,
+  openApp,
+  openUrl,
+  openUrlInApp,
+  seq,
+  seqSocket,
+  keystroke,
+  seqAgentFromClipboard,
+} from "./types/index.ts"
 
-const useSeqSocket = false
+const useSeqSocket = true
 const debugSimJK = false
 
 // Cursor GH workspaces are noisy and easy to accidentally trigger.
@@ -327,33 +341,27 @@ export default {
       mappings: [
         {
           from: "j",
-          to: shell(
-            'open -g "dash-plugin://query=.tsprofile%3A&prevent_activation=true"',
-          ),
+          to: openUrl("dash-plugin://query=.tsprofile%3A&prevent_activation=true", {
+            background: true,
+          }),
         },
         {
           from: "k",
-          to: shell(
-            'open "dash-plugin://query=.goprofile%3A&prevent_activation=true"',
-          ),
+          to: openUrl("dash-plugin://query=.goprofile%3A&prevent_activation=true"),
         },
         {
           from: "n",
-          to: shell(
-            'open "dash-plugin://query=.pyprofile%3A&prevent_activation=true"',
-          ),
+          to: openUrl("dash-plugin://query=.pyprofile%3A&prevent_activation=true"),
         },
         {
           from: "3",
-          to: shell(
-            'open -g "dash-plugin://query=.rustprofile%3A&prevent_activation=true"',
-          ),
+          to: openUrl("dash-plugin://query=.rustprofile%3A&prevent_activation=true", {
+            background: true,
+          }),
         },
         {
           from: "spacebar",
-          to: shell(
-            'open "dash-plugin://query=.swiftprofile%3A&prevent_activation=true"',
-          ),
+          to: openUrl("dash-plugin://query=.swiftprofile%3A&prevent_activation=true"),
         },
       ],
     },
@@ -654,15 +662,14 @@ export default {
         { from: "r", to: openApp("1Password") },
         { from: "t", to: openApp("Activity Monitor") },
         { from: "u", to: openApp("Instruments") },
-        { from: "i", to: seqSocket("arc: n8n.io") },
+        { from: "i", to: openUrlInApp("https://n8n.io", "Arc") },
         { from: "o", to: openApp("Keyboard Maestro") },
         { from: "escape", to: openApp("Finder") },
         { from: "a", to: openApp("Xcode") },
         { from: "d", to: openApp("Fantastical") },
         { from: "f", to: openApp("Things") },
         { from: "h", to: openApp("Proxyman") },
-        // Legacy path for A/B latency comparison (shell -> open -a).
-        { from: "j", to: shell(`open -a ${JSON.stringify("Ghostty")}`) },
+        { from: "j", to: openApp("Ghostty") },
         { from: "k", to: openApp("Safari") },
         { from: "l", to: openApp("Zed Preview") },
         { from: "semicolon", to: openApp("Cursor") },
@@ -797,7 +804,7 @@ export default {
       layer: "t-mode",
       mappings: [
         { from: "w", to: zed("~/repos/overengineeringstudio/effect-utils") },
-        { from: "a", to: shell("seq agent \"$(pbpaste)\"") },
+        { from: "a", to: seqAgentFromClipboard() },
         { from: "s", to: shell("seq screenshot /tmp/seq_screenshot.png && open /tmp/seq_screenshot.png") },
       ],
       // { from: "w", to: km("arc: wikipedia") },
@@ -1168,14 +1175,7 @@ export default {
         },
         { from: "u", to: seqSocket("telegram: log") },
         { from: "i", to: seqSocket("telegram: nikivdev") },
-        {
-          from: "o",
-          to: seq("X Feed (in Arc)", [
-            openApp("Arc"),
-            keystroke("ctrl+1"),
-            keystroke("cmd+6"),
-          ], { eagerKeystrokes: true, waitFrontmostMs: 0, appSettleMs: 0 }),
-        },
+        { from: "o", to: seqSocket("X Feed (in Arc)") },
         {
           from: "z",
           to: {
@@ -2243,17 +2243,10 @@ export default {
           from: "r",
           to: { key: "7", modifiers: ["left_command", "left_shift"] },
         },
-        { from: "t", to: seqSocket("web: GitHub (personal)") },
+        { from: "t", to: openUrlInApp("https://github.com/nikivdev", "Safari") },
         { from: "i", to: openApp("Reader") },
         // { from: "o", to: openApp("X Feed (in Arc)") },
-        {
-          from: "o",
-          to: seq("X Feed (in Arc)", [
-            openApp("Arc"),
-            keystroke("ctrl+1"),
-            keystroke("cmd+6"),
-          ], { eagerKeystrokes: true, waitFrontmostMs: 0, appSettleMs: 0 }),
-        },
+        { from: "o", to: seqSocket("X Feed (in Arc)") },
         { from: "p", to: openApp("X profile (in Arc)") },
         { from: "a", to: openApp("Safari Technology Preview") },
         { from: "s", to: openApp("Arc") },
@@ -2261,7 +2254,7 @@ export default {
           from: "f",
           to: { key: "9", modifiers: ["left_command", "left_shift"] },
         },
-        { from: "g", to: seqSocket("arc: grokipedia.com") },
+        { from: "g", to: openUrlInApp("https://grokipedia.com", "Arc") },
         { from: "h", to: openApp("Codex Monitor") },
         { from: "j", to: openApp("Discord") },
         { from: "k", to: openApp("Dia") },
@@ -2271,21 +2264,14 @@ export default {
         { from: "semicolon", to: openApp("Slack") },
         {
           from: "grave_accent_and_tilde",
-          to: seqSocket("arc: news.ycombinator/new-comments"),
+          to: openUrlInApp("https://news.ycombinator/new-comments", "Arc"),
         },
         { from: "z", to: openApp("IG Messages (in Arc)") },
         { from: "c", to: seqSocket("telegram: saved") },
-        {
-          from: "m",
-          to: seq("X Messages (in Arc)", [
-            openApp("Arc"),
-            keystroke("ctrl+1"),
-            keystroke("cmd+8"),
-          ], { eagerKeystrokes: true, waitFrontmostMs: 0, appSettleMs: 0 }),
-        },
-        { from: "comma", to: seqSocket("arc: aistudio.google.com (3)") },
-        { from: "period", to: seqSocket("arc: colab.research.google.com") },
-        { from: "slash", to: seqSocket("arc: aistudio.google.com (2)") },
+        { from: "m", to: seqSocket("X Messages (in Arc)") },
+        { from: "comma", to: openUrlInApp("https://aistudio.google.com", "Arc") },
+        { from: "period", to: openUrlInApp("https://colab.research.google.com", "Arc") },
+        { from: "slash", to: openUrlInApp("https://aistudio.google.com", "Arc") },
       ],
       // { from: "n", to: km("linear: Plan") },
     },
