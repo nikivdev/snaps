@@ -169,6 +169,30 @@ export function seqSocket(macroName: string, endpoint?: string): { send_user_com
   )
 }
 
+export function paste(text: string, endpoint?: string): { send_user_command: SendUserCommand } {
+  return sendUserCommand(
+    {
+      v: 1,
+      type: "paste_text",
+      text,
+      line: `RUN paste: ${text}`,
+    },
+    endpoint,
+  )
+}
+
+export function enter(text: string, endpoint?: string): { send_user_command: SendUserCommand } {
+  return sendUserCommand(
+    {
+      v: 1,
+      type: "enter_text",
+      text,
+      line: `RUN enter: ${text}`,
+    },
+    endpoint,
+  )
+}
+
 // Kept in sync with `../index.ts` for editor type-checking when importing from
 // `./types/types/index.ts` directly.
 function seqStepsToInlineYaml(macroName: string, steps: unknown[]): string | null {
@@ -345,9 +369,8 @@ export function openUrl(url: string): { shell: string } {
 }
 
 export function alfred(workflow: string, trigger: string, arg?: string): { shell: string } {
-  const base = `alfred://runtrigger/${encodeURIComponent(workflow)}/${encodeURIComponent(trigger)}/`
-  const url = arg ? `${base}?argument=${encodeURIComponent(arg)}` : base
-  return shell(`open -g "${url}"`)
+  const argPart = arg ? ` with argument "${arg}"` : ""
+  return shell(`/usr/bin/osascript -e 'tell application id "com.runningwithcrayons.Alfred" to run trigger "${trigger}" in workflow "${workflow}"${argPart}'`)
 }
 
 export function raycast(extension: string): { shell: string } {

@@ -11,6 +11,8 @@ import {
   openUrlInApp,
   seq,
   seqSocket,
+  paste,
+  enter,
   keystroke,
   seqAgentFromClipboard,
 } from "./types/index.ts"
@@ -142,6 +144,18 @@ export default {
       // { from: "left_command", to: km("open: Reflect") },
     },
 
+    // swap : and ;
+    {
+      description: "swap : and ;",
+      mappings: [
+        {
+          from: { key: "semicolon", modifiers: [] },
+          to: { key: "semicolon", modifiers: "left_shift" },
+        },
+        { from: { key: "semicolon", modifiers: "shift" }, to: "semicolon" },
+      ],
+    },
+
     // s-mode: essential navigation and editing
     {
       description: "skey (essential)",
@@ -209,18 +223,6 @@ export default {
       ],
       // { from: "left_command", to: km("paste last flow cmd") },
       // { from: "spacebar", to: km("get last cmd output & paste it") },
-    },
-
-    // swap : and ;
-    {
-      description: "swap : and ;",
-      mappings: [
-        {
-          from: { key: "semicolon", modifiers: [] },
-          to: { key: "semicolon", modifiers: "left_shift" },
-        },
-        { from: { key: "semicolon", modifiers: "shift" }, to: "semicolon" },
-      ],
     },
 
     // simultaneous keys
@@ -901,7 +903,7 @@ export default {
         { from: "d", to: "backslash" },
         { from: "f", to: "hyphen" },
         { from: "g", to: { key: "4", modifiers: "left_shift" } },
-        { from: "h", to: seqSocket("paste: €") },
+        { from: "h", to: paste("€") },
         { from: "j", to: "equal_sign" },
         {
           from: "l",
@@ -1162,7 +1164,7 @@ export default {
             modifiers: ["left_control", "left_option", "left_command"],
           },
         },
-        { from: "l", to: openApp("Claude") },
+        { from: "l", to: openApp("/Applications/Claude.app") },
         {
           from: "semicolon",
           to: useSeqSocket
@@ -1331,10 +1333,10 @@ export default {
       description: "tilkey ()",
       layer: "tilde-mode",
       mappings: [
-        { from: "q", to: seqSocket("paste: personal nikita@ email") },
-        { from: "w", to: seqSocket("paste: personal nikita.vo@ email") },
-        { from: "e", to: seqSocket("enter: explain") },
-        { from: "i", to: seqSocket("paste: Cal.com (15 min)") },
+        { from: "q", to: paste("personal nikita@ email") },
+        { from: "w", to: paste("personal nikita.vo@ email") },
+        { from: "e", to: enter("explain") },
+        { from: "i", to: paste("Cal.com (15 min)") },
         {
           from: "o",
           to: {
@@ -1342,23 +1344,24 @@ export default {
             modifiers: ["left_control", "left_shift", "left_command"],
           },
         },
-        { from: "s", to: seqSocket("enter: what to run next?") },
-        { from: "d", to: seqSocket("paste: what flow.toml task to run ") },
-        { from: "f", to: seqSocket("paste: create flow.toml task ") },
+        { from: "a", to: enter("address all issues") },
+        { from: "s", to: enter("what to run next?") },
+        { from: "d", to: paste("what flow.toml task to run ") },
+        { from: "f", to: paste("create flow.toml task ") },
         { from: "h", to: km("New KM global macro") },
         { from: "j", to: km("Test") },
         { from: "k", to: km("Go to test macro") },
         { from: "l", to: alfred("run", "iansinnott.keyboardmaestro") },
         { from: "semicolon", to: raycast("loris/safari/search-history") },
         { from: "c", to: seqSocket("arc: dashboard.electric-sql.cloud") },
-        { from: "v", to: seqSocket("paste: need hive agent ") }, // todo: better
+        { from: "v", to: paste("need hive agent ") }, // todo: better
         {
           from: "b",
-          to: seqSocket("paste: todo: better"),
+          to: paste("todo: better"),
         },
         {
           from: "n",
-          to: seqSocket("paste: todo: "),
+          to: paste("todo: "),
         },
         {
           from: "m",
@@ -1367,10 +1370,10 @@ export default {
           ),
         },
         { from: "b", to: seqSocket("arc: reddit.com (upvotes)") },
-        { from: "comma", to: seqSocket("enter: write docs/how-it-works.md") },
+        { from: "comma", to: enter("write docs/how-it-works.md") },
         { from: "period", to: seqSocket("arc: x.com (bookmarks)") },
         { from: "slash", to: seqSocket("arc: x.com (likes)") },
-        { from: "left_command", to: seqSocket("paste: create cmd in flow where ") },
+        { from: "left_command", to: paste("create cmd in flow where ") },
       ],
     },
 
@@ -1384,14 +1387,14 @@ export default {
         { from: "f", to: openApp("Spark") },
         { from: "j", to: seqSocket("arc: gmail.com") },
         { from: "k", to: openApp("Simulator") },
-        { from: "l", to: seqSocket("arc: localhost:linsa") },
+        { from: "l", to: openApp("zoom.us") },
+        // { from: "l", to: seqSocket("arc: localhost:linsa") },
         {
           from: "semicolon",
           to: raycast("raycast/emoji-symbols/search-emoji-symbols"),
         },
-        { from: "v", to: seqSocket("arc: drive.google.com") },
+        // { from: "v", to: seqSocket("arc: drive.google.com") },
         // { from: "n", to: km("New X dm") }, // todo: make fast via arc site (for now)
-        { from: "m", to: openApp("Zoom") },
         { from: "spacebar", to: seqSocket("arc: v0.app") },
       ],
       // { from: "spacebar", to: km("use ai") },
@@ -1575,20 +1578,22 @@ export default {
       layer: "b-mode",
       mappings: [
         { from: "e", to: zed("~/repos/tw93/Mole") },
+        { from: "r", to: zed("~/repos/aidenybai/react-grab") },
         { from: "i", to: zed("~/repos/oxc-project/tsgolint") },
         { from: "o", to: zed("~/repos/rolldown/rolldown") },
-        { from: "s", to: zed("~/repos/vercel/streamdown") },
-        { from: "d", to: zed("~/repos/aidenybai/react-grab") },
+        { from: "s", to: zed("~/repos/rudrankriyam/App-Store-Connect-CLI") },
+        { from: "d", to: zed("~/repos/TanStack/table") },
         { from: "f", to: zed("~/repos/npmx-dev/npmx.dev") },
         { from: "j", to: zed("~/repos/oven-sh/bun") },
-        { from: "k", to: zed("~/repos/polarsource/polar") },
+        { from: "k", to: zed("~/repos/pqrs-org/Karabiner-Elements-user-command-receiver") },
         { from: "l", to: zed("~/repos/oxc-project/oxc") },
         { from: "semicolon", to: zed("~/repos/vercel/turborepo") },
-        { from: "n", to: zed("~/repos/pqrs-org/Karabiner-Elements") },
+        { from: "n", to: zed("~/repos/vercel/streamdown") },
         { from: "m", to: zed("~/repos/TanStack/router") },
-        { from: "spacebar", to: zed("~/repos/TanStack/table") },
+        { from: "spacebar", to: zed("~/repos/polarsource/polar") },
         { from: "period", to: zed("~/repos/tim-smart/lalph") },
       ],
+      // { from: "n", to: zed("~/repos/pqrs-org/Karabiner-Elements") },
       // { from: "j", to: zed("~/code/jack") },
       // { from: "h", to: km("edit: GitHub Bio") },
       // {
@@ -1632,8 +1637,9 @@ export default {
         { from: "s", to: zed("~/code/lang/swift") },
         { from: "d", to: zed("~/code/lang/rust") },
         { from: "f", to: zed("~/code/lang/py") },
+        { from: "z", to: zed("~/repos/astral-sh/uv") },
         { from: "c", to: zed("~/repos/ClickHouse/ClickHouse") },
-        { from: "v", to: zed("~/repos/astral-sh/uv") },
+        { from: "v", to: zed("~/repos/Makisuo/maple") },
         { from: "spacebar", to: zed("~/code/lang/go") },
       ],
       // { from: "escape", to: zed("~/code/nikiv/docs/lessons.mdx") },
@@ -2295,5 +2301,6 @@ export default {
         // { from: "w", to: zed("~/code/lin") },
       ],
     },
+
   ],
 } satisfies Config

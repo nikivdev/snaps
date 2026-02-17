@@ -374,7 +374,14 @@ function directPayloadForSeqMacro(macroName: string): unknown | null {
   }
 
   if (meta.app) {
-    return { line: `OPEN_WITH_APP ${meta.app}:${meta.arg}` }
+    return {
+      v: 1,
+      type: "open_with_app",
+      app: meta.app,
+      target: meta.arg,
+      // Compatibility fallback for older bridges that only understand line commands.
+      line: `OPEN_WITH_APP ${meta.app}:${meta.arg}`,
+    }
   }
   return {
     v: 1,
@@ -408,6 +415,25 @@ export function seqSocket(
     },
     endpoint,
   )
+}
+
+function textCommandPayload(type: "paste_text" | "enter_text", text: string) {
+  const legacyAction = type === "paste_text" ? "paste" : "enter"
+  return {
+    v: 1,
+    type,
+    text,
+    // Compatibility fallback for older bridges that only understand line commands.
+    line: `RUN ${legacyAction}: ${text}`,
+  }
+}
+
+export function paste(text: string, endpoint?: string): { send_user_command: SendUserCommand } {
+  return sendUserCommand(textCommandPayload("paste_text", text), endpoint)
+}
+
+export function enter(text: string, endpoint?: string): { send_user_command: SendUserCommand } {
+  return sendUserCommand(textCommandPayload("enter_text", text), endpoint)
 }
 
 export function seqSocketFast(macroName: string, endpoint?: string): { send_user_command: SendUserCommand } {
@@ -687,6 +713,11 @@ export function zed(path: string): { send_user_command: SendUserCommand } {
   const expandedPath = path === "~" ? home : path.startsWith("~/") ? `${home}${path.slice(1)}` : path
   const appPath = "/System/Volumes/Data/Applications/Zed Preview.app"
   return sendUserCommand({
+    v: 1,
+    type: "open_with_app",
+    app: appPath,
+    target: expandedPath,
+    // Compatibility fallback for older bridges that only understand line commands.
     line: `OPEN_WITH_APP ${appPath}:${expandedPath}`,
   })
 }
@@ -745,6 +776,11 @@ export function openUrl(
 
 export function openUrlInApp(url: string, app: string): { send_user_command: SendUserCommand } {
   return sendUserCommand({
+    v: 1,
+    type: "open_with_app",
+    app,
+    target: url,
+    // Compatibility fallback for older bridges that only understand line commands.
     line: `OPEN_WITH_APP ${app}:${url}`,
   })
 }
@@ -778,9 +814,10 @@ export function alfred(
   trigger: string,
   arg?: string,
 ): { shell: string } {
-  const base = `alfred://runtrigger/${encodeURIComponent(workflow)}/${encodeURIComponent(trigger)}/`
-  const url = arg ? `${base}?argument=${encodeURIComponent(arg)}` : base
-  return shell(`open -g "${url}"`)
+  const argPart = arg ? ` with argument "${arg}"` : ""
+  return shell(
+    `/usr/bin/osascript -e 'tell application id "com.runningwithcrayons.Alfred" to run trigger "${trigger}" in workflow "${workflow}"${argPart}'`,
+  )
 }
 
 export function raycast(extension: string): { send_user_command: SendUserCommand } {
