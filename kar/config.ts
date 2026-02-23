@@ -15,10 +15,19 @@ import {
   enter,
   keystroke,
   seqAgentFromClipboard,
+  seqScreenshotOpen,
+  openAppToggle,
 } from "./types/index.ts"
 
 const useSeqSocket = true
 const debugSimJK = false
+
+// Force this macro to compile as a seq "sequence" (open_app + keystroke),
+// not open_url about:blank. This avoids race conditions where cmd+t lands in
+// the previous app before Safari becomes frontmost.
+const _seqMacroDefs = [
+  seq("open Safari new tab", [openApp("Safari"), keystroke("cmd+t")]),
+]
 
 // Cursor GH workspaces are noisy and easy to accidentally trigger.
 // Keep them disabled until we migrate them to seq-native primitives.
@@ -32,71 +41,72 @@ export default {
   profile: {
     alone: 80,
     // Keep explicit simultaneous chords snappy (avoid perceptible delay on normal typing).
-    // Simlayers use their own per-layer thresholds (usually 250ms).
-    sim: 30,
+    // 30ms is too strict for jk on many keyboards and falls through to single-key mappings
+    // (e.g. k -> Safari). Use a still-low but reliable threshold.
+    // Simlayers use their own per-layer thresholds (usually 170ms).
+    sim: 80,
   },
 
   simple: [{ from: "caps_lock", to: "escape" }],
 
   simlayers: {
-    "semicolon-mode": { key: "semicolon", threshold: 250 },
-    "quote-mode": { key: "quote", threshold: 250 },
-    "backslash-mode": { key: "non_us_backslash", threshold: 250 },
-    "1-mode": { key: "1", threshold: 250 },
-    "2-mode": { key: "2", threshold: 250 },
-    "3-mode": { key: "3", threshold: 250 },
-    "4-mode": { key: "4", threshold: 250 },
-    "5-mode": { key: "5", threshold: 250 },
-    "7-mode": { key: "7", threshold: 250 },
-    "8-mode": { key: "8", threshold: 250 },
-    "9-mode": { key: "9", threshold: 250 },
-    "0-mode": { key: "0", threshold: 250 },
-    "hyphen-mode": { key: "hyphen", threshold: 250 },
-    "equal-sign-mode": { key: "equal_sign", threshold: 250 },
-    "tab-mode": { key: "tab", threshold: 250 },
-    "q-mode": { key: "q", threshold: 250 },
-    "w-mode": { key: "w", threshold: 250 },
-    "e-mode": { key: "e", threshold: 250 },
-    "r-mode": { key: "r", threshold: 250 },
-    "t-mode": { key: "t", threshold: 250 },
-    "u-mode": { key: "u", threshold: 250 },
-    "y-mode": { key: "y", threshold: 250 },
-    "i-mode": { key: "i", threshold: 250 },
-    "o-mode": { key: "o", threshold: 250 },
-    "p-mode": { key: "p", threshold: 250 },
-    "open-bracket-mode": { key: "open_bracket", threshold: 250 },
-    "close-bracket-mode": { key: "close_bracket", threshold: 250 },
-    "a-mode": { key: "a", threshold: 250 },
-    "s-mode": { key: "s", threshold: 250 },
-    "d-mode": { key: "d", threshold: 250 },
-    "f-mode": { key: "f", threshold: 250 },
-    "g-mode": { key: "g", threshold: 250 },
-    "escape-mode": { key: "escape", threshold: 250 },
-    "tilde-mode": { key: "grave_accent_and_tilde", threshold: 250 },
-    "z-mode": { key: "z", threshold: 250 },
-    "x-mode": { key: "x", threshold: 250 },
-    "c-mode": { key: "c", threshold: 250 },
-    "v-mode": { key: "v", threshold: 250 },
-    "b-mode": { key: "b", threshold: 250 },
-    "n-mode": { key: "n", threshold: 250 },
-    "m-mode": { key: "m", threshold: 250 },
-    "comma-mode": { key: "comma", threshold: 250 },
-    "dot-mode": { key: "period", threshold: 250 },
-    "slash-mode": { key: "slash", threshold: 250 },
-    "left-control-mode": { key: "left_control", threshold: 250 },
-    "left-option-mode": { key: "left_option", threshold: 250 },
-    "left-command-mode": { key: "left_command", threshold: 250 },
-    "right-command-mode": { key: "right_command", threshold: 250 },
-    "spacebar-mode": { key: "spacebar", threshold: 250 },
-    "ts-mode": { key: "1", threshold: 250 },
-    "go-mode": { key: "2", threshold: 250 },
-    "py-mode": { key: "3", threshold: 250 },
-    "swift-mode": { key: "6", threshold: 250 },
-    // "rust-mode": { key: "grave_accent_and_tilde", threshold: 250 },
+    "semicolon-mode": { key: "semicolon", threshold: 170 },
+    "quote-mode": { key: "quote", threshold: 170 },
+    "backslash-mode": { key: "non_us_backslash", threshold: 170 },
+    "1-mode": { key: "1", threshold: 170 },
+    "2-mode": { key: "2", threshold: 170 },
+    "3-mode": { key: "3", threshold: 170 },
+    "4-mode": { key: "4", threshold: 170 },
+    "5-mode": { key: "5", threshold: 170 },
+    "7-mode": { key: "7", threshold: 170 },
+    "8-mode": { key: "8", threshold: 170 },
+    "9-mode": { key: "9", threshold: 170 },
+    "0-mode": { key: "0", threshold: 170 },
+    "hyphen-mode": { key: "hyphen", threshold: 170 },
+    "equal-sign-mode": { key: "equal_sign", threshold: 170 },
+    "tab-mode": { key: "tab", threshold: 170 },
+    "q-mode": { key: "q", threshold: 170 },
+    "w-mode": { key: "w", threshold: 170 },
+    "e-mode": { key: "e", threshold: 170 },
+    "r-mode": { key: "r", threshold: 170 },
+    "t-mode": { key: "t", threshold: 170 },
+    "u-mode": { key: "u", threshold: 170 },
+    "y-mode": { key: "y", threshold: 170 },
+    "i-mode": { key: "i", threshold: 170 },
+    "o-mode": { key: "o", threshold: 170 },
+    "p-mode": { key: "p", threshold: 170 },
+    "open-bracket-mode": { key: "open_bracket", threshold: 170 },
+    "close-bracket-mode": { key: "close_bracket", threshold: 170 },
+    "a-mode": { key: "a", threshold: 170 },
+    "s-mode": { key: "s", threshold: 170 },
+    "d-mode": { key: "d", threshold: 170 },
+    "f-mode": { key: "f", threshold: 170 },
+    "g-mode": { key: "g", threshold: 170 },
+    "escape-mode": { key: "escape", threshold: 170 },
+    "tilde-mode": { key: "grave_accent_and_tilde", threshold: 170 },
+    "z-mode": { key: "z", threshold: 170 },
+    "x-mode": { key: "x", threshold: 170 },
+    "c-mode": { key: "c", threshold: 170 },
+    "v-mode": { key: "v", threshold: 170 },
+    "b-mode": { key: "b", threshold: 170 },
+    "n-mode": { key: "n", threshold: 170 },
+    "m-mode": { key: "m", threshold: 170 },
+    "comma-mode": { key: "comma", threshold: 170 },
+    "dot-mode": { key: "period", threshold: 170 },
+    "slash-mode": { key: "slash", threshold: 170 },
+    "left-control-mode": { key: "left_control", threshold: 170 },
+    "left-option-mode": { key: "left_option", threshold: 170 },
+    "left-command-mode": { key: "left_command", threshold: 170 },
+    "right-command-mode": { key: "right_command", threshold: 170 },
+    "spacebar-mode": { key: "spacebar", threshold: 170 },
+    "ts-mode": { key: "1", threshold: 170 },
+    "go-mode": { key: "2", threshold: 170 },
+    "py-mode": { key: "3", threshold: 170 },
+    "swift-mode": { key: "6", threshold: 170 },
+    // "rust-mode": { key: "grave_accent_and_tilde", threshold: 170 },
   },
 
   rules: [
-    // semicolon-mode: control for numbers, shift for letters
     {
       description: "colonkey (shift)",
       layer: "semicolon-mode",
@@ -120,7 +130,7 @@ export default {
         { from: "i", to: { key: "i", modifiers: "left_shift" } },
         { from: "o", to: { key: "o", modifiers: "left_shift" } },
         { from: "p", to: { key: "p", modifiers: "left_shift" } },
-        { from: "escape", to: zed("~/code/nikiv/do.md") },
+        { from: "escape", to: zed("~/docs/do.mdx") },
         { from: "a", to: { key: "a", modifiers: "left_shift" } },
         { from: "s", to: { key: "s", modifiers: "left_shift" } },
         { from: "d", to: { key: "d", modifiers: "left_shift" } },
@@ -137,8 +147,9 @@ export default {
         { from: "b", to: { key: "b", modifiers: "left_shift" } },
         { from: "n", to: { key: "n", modifiers: "left_shift" } },
         { from: "m", to: { key: "m", modifiers: "left_shift" } },
-        { from: "left_command", to: openApp("Notion") },
-        { from: "spacebar", to: zed("~/code/nikiv") },
+        // { from: "left_command", to: openApp("Notion") },
+        { from: "left_command", to: zed("~/code/nikiv") },
+        { from: "spacebar", to: zed("~/docs") },
       ],
       // { from: "grave_accent_and_tilde", to: zed("~/docs") },
       // { from: "left_command", to: km("open: Reflect") },
@@ -156,7 +167,6 @@ export default {
       ],
     },
 
-    // s-mode: essential navigation and editing
     {
       description: "skey (essential)",
       layer: "s-mode",
@@ -231,10 +241,19 @@ export default {
       mappings: [
         {
           from: ["j", "k"],
-          // Debug knob: if true, write a marker so we know the chord fired at all.
-          to: debugSimJK ? shell(`echo "jk $(date +%s%3N)" >> /tmp/kar-sim.log`) : seqSocket("open Safari new tab"),
+          to: debugSimJK
+            ? shell(`echo "jk $(date +%s%3N)" >> /tmp/kar-sim.log`)
+            : seqSocket("open Safari new tab"),
+          note: "Open Safari new tab via seq daemon.",
         },
-        { from: ["k", "n"], to: seqSocket("open Comet new tab") },
+        {
+          from: ["k", "j"],
+          to: debugSimJK
+            ? shell(`echo "kj $(date +%s%3N)" >> /tmp/kar-sim.log`)
+            : seqSocket("open Safari new tab"),
+          note: "Same as j+k via seq daemon.",
+        },
+        // { from: ["k", "n"], to: seqSocket("open Comet new tab") },
         { from: ["k", "m"], to: seqSocket("New Linear task") },
         // lin launcher (moved to assistant)
         // {
@@ -265,7 +284,6 @@ export default {
       ],
     },
 
-    // backslash-mode: sites
     {
       description: "backkey (sites)",
       layer: "backslash-mode",
@@ -276,7 +294,6 @@ export default {
       ],
     },
 
-    // 1-mode: repo prompt
     {
       description: "1key (repo prompt)",
       layer: "1-mode",
@@ -290,7 +307,6 @@ export default {
       ],
     },
 
-    // 2-mode: move, searches
     {
       description: "2key (move, searches)",
       layer: "2-mode",
@@ -307,7 +323,6 @@ export default {
       ],
     },
 
-    // 3-mode: ports
     {
       description: "3key (ports)",
       layer: "3-mode",
@@ -325,9 +340,8 @@ export default {
       ],
     },
 
-    // 4-mode: scroll
     {
-      description: "4key ()",
+      description: "4key (scroll)",
       layer: "4-mode",
       mappings: [
         { from: "o", to: seqSocket("arc: scaleway.com") },
@@ -336,7 +350,6 @@ export default {
       ],
     },
 
-    // 5-mode: language switching
     {
       description: "5key (swapping languages)",
       layer: "5-mode",
@@ -368,90 +381,12 @@ export default {
       ],
     },
 
-    // 7-mode: gh workspaces
     {
-      description: "7key (gh workspaces)",
+      description: "7key (gh workspaces, disabled)",
       layer: "7-mode",
-      mappings: [
-        { from: "r", to: cursor("brush-gh") },
-        { from: "f", to: cursor("folo-rs-gh") },
-        { from: "c", to: cursor("calloop-rs-gh") },
-        { from: "spacebar", to: cursor("model2vec-rs-gh") },
-      ],
+      mappings: [],
     },
 
-    // 8-mode: gh workspaces
-    {
-      description: "8key (gh workspaces)",
-      layer: "8-mode",
-      mappings: [
-        { from: "q", to: cursor("quic-go-gh") },
-        { from: "e", to: cursor("elevenlabs-gh") },
-        { from: "r", to: cursor("rig-gh") },
-        { from: "s", to: cursor("goose-gh") },
-        { from: "g", to: cursor("g3-gh") },
-        { from: "k", to: cursor("anki-gh") },
-        { from: "c", to: cursor("quiche-gh") },
-        { from: "spacebar", to: cursor("fumadocs-gh") },
-      ],
-    },
-
-    // 9-mode: gh workspaces
-    {
-      description: "9key (gh workspaces)",
-      layer: "9-mode",
-      mappings: [
-        { from: "w", to: cursor("vscode-vim-gh") },
-        { from: "t", to: cursor("typst-gh") },
-        { from: "e", to: cursor("neovim-gh") },
-        { from: "u", to: cursor("cuml-gh") },
-        { from: "s", to: cursor("scipy-gh") },
-        { from: "d", to: cursor("pandas-gh") },
-        { from: "f", to: cursor("snafu-gh") },
-        { from: "v", to: cursor("v8-gh") },
-        { from: "spacebar", to: cursor("keel-gh") },
-      ],
-    },
-
-    // hyphen-mode: gh workspaces
-    {
-      description: "hyphenkey (gh workspaces)",
-      layer: "hyphen-mode",
-      mappings: [
-        { from: "e", to: cursor("phoenix-gh") },
-        { from: "r", to: cursor("elixir-gh") },
-        { from: "t", to: cursor("upstash-gh") },
-        { from: "a", to: cursor("astro-gh") },
-        { from: "s", to: cursor("scalar-gh") },
-        { from: "d", to: cursor("caddy-gh") },
-        { from: "f", to: cursor("traefik-gh") },
-        { from: "g", to: cursor("godot-gh") },
-        { from: "b", to: cursor("ladybird-gh") },
-        { from: "x", to: cursor("xata-gh") },
-        { from: "spacebar", to: cursor("morphic-gh") },
-      ],
-    },
-
-    // hyphen-mode: more gh workspaces (second set)
-    {
-      description: "equalSignKey (gh workspaces)",
-      layer: "hyphen-mode",
-      mappings: [
-        { from: "q", to: cursor("sqlight-gh") },
-        { from: "w", to: cursor("swift-async-algorithms-gh") },
-        { from: "e", to: cursor("lean-gh") },
-        { from: "t", to: cursor("yugabyte-db-gh") },
-        { from: "s", to: cursor("bolt-ts-gh") },
-        { from: "f", to: cursor("fets-gh") },
-        { from: "g", to: cursor("gptqmodel-gh") },
-        { from: "c", to: cursor("curlie-gh") },
-        { from: "t", to: cursor("streamlit-gh") },
-        { from: "b", to: cursor("browser-bee-gh") },
-        { from: "spacebar", to: cursor("n8n-gh") },
-      ],
-    },
-
-    // tab-mode: sites
     {
       description: "tabkey (sites)",
       layer: "tab-mode",
@@ -474,7 +409,6 @@ export default {
       ],
     },
 
-    // q-mode: cmd+shift
     {
       description: "qkey (cmd + shift)",
       layer: "q-mode",
@@ -655,7 +589,6 @@ export default {
       ],
     },
 
-    // w-mode: apps
     {
       description: "wkey (apps)",
       layer: "w-mode",
@@ -676,9 +609,9 @@ export default {
         { from: "l", to: openApp("Zed Preview") },
         { from: "semicolon", to: openApp("Cursor") },
         { from: "quote", to: openApp("JuxtaCode") },
-        { from: "c", to: openApp("Conar") },
+        { from: "c", to: openApp("OrbStack") },
         { from: "v", to: openApp("TablePlus") },
-        { from: "b", to: openApp("OrbStack") },
+        { from: "b", to: openApp("Conar") },
         { from: "n", to: openApp("Rise") },
         { from: "m", to: openApp("Repo Prompt") },
         { from: "period", to: openApp("Yaak") },
@@ -686,13 +619,8 @@ export default {
         { from: "left_command", to: zed("~/config/fish/fn.fish") },
         { from: "spacebar", to: openApp("~/code/org/linsa/linsa/build/app/node_modules/electron/dist/Electron.app") },
       ],
-      // { from: "spacebar", to: zed("~/config/i/lin/config.ts") },
-      // { from: "g", to: km("open: Granola") },
-      // { from: "e", to: zed("~/code") }, // too much load on zed to load in code
-      // { from: "semicolon", to: km("open: Electron") }, // todo: make 1f desktop & move it somewhere nice
     },
 
-    // e-mode: cmd
     {
       description: "ekey (cmd)",
       layer: "e-mode",
@@ -749,58 +677,25 @@ export default {
         { from: "8", to: { key: "8", modifiers: "left_command" } },
         { from: "9", to: { key: "9", modifiers: "left_command" } },
         { from: "0", to: { key: "0", modifiers: "left_command" } },
-        // { from: "left_command", to: km("open: Glide") }, // do: do smth with glide too. mby pass current context into glide (review etc)
-        // todo: replace with glide once it has full features of preview and more
-        // { from: "spacebar", to: km("open: Preview") },
-        // { from: "spacebar", to: openApp("~/code/org/linsa/linsa/build/app/node_modules/electron/dist/Electron.app") },
         { from: "spacebar", to: openApp("Linear") },
-        // { from: "spacebar", to: openApp("Glide") },
-        // { from: "spacebar", to: zed("~/config/i/kar/config.ts") },
-        // { from: "spacebar", to: km("zed: ~/.config/lin/config.ts") },
-        // todo: paste optimal prompt with context for current sesh
-        // { from: "spacebar", to: zed("~/docs") },
-        // { from: "spacebar", to: zed("~/code/rise") },
-        // {
-        //   from: "spacebar",
-        //   to: {
-        //     key: "c",
-        //     modifiers: ["left_command", "left_option", "left_shift"],
-        //   },
-        // },
       ],
     },
 
-    // r-mode: apps
     {
-      description: "rkey (apps)",
+      description: "rkey ()",
       layer: "r-mode",
       mappings: [
-        { from: "tab", to: openApp("Transmission") },
-        { from: "q", to: openApp("Craft") },
-        { from: "w", to: openApp("IINA") },
-        { from: "e", to: openApp("System Settings") },
-        { from: "i", to: openApp("Voice Memos") },
-        { from: "o", to: openApp("OBS") },
-        { from: "p", to: openApp("PDF Expert") },
-        { from: "escape", to: openApp("Darkroom") },
-        { from: "a", to: openApp("Alfred Preferences") },
-        { from: "g", to: openApp("Pages") },
-        { from: "j", to: openApp("Preview") },
-        { from: "k", to: openApp("Photos") },
-        { from: "l", to: openApp("LM Studio") },
-        { from: "semicolon", to: openApp("Final Cut Pro") },
-        { from: "n", to: openApp("Blender") },
-        { from: "m", to: openApp("Lightroom") },
-        { from: "period", to: openApp("DaVinci Resolve") },
-        { from: "slash", to: openApp("Developer") },
-        { from: "spacebar", to: openApp("Glide") },
+        // { from: "s", to: enter("what to run next?") },
+        // { from: "d", to: paste("what flow.toml task to run ") },
+        { from: "l", to: paste("/prompts:review-push") },
+        {
+          from: "semicolon",
+          to: raycast("raycast/emoji-symbols/search-emoji-symbols"),
+        },
+        { from: "spacebar", to: paste("nikita.voloboev@gmail.com") },
       ],
-      // { from: "e", to: openApp("Music") },
-      // { from: "r", to: km("open: System Settings: Network") },
-      // { from: "b", to: km("Edit keyboard shortcuts") },
     },
 
-    // t-mode:
     {
       description: "tkey ()",
       layer: "t-mode",
@@ -809,27 +704,8 @@ export default {
         { from: "a", to: seqAgentFromClipboard() },
         { from: "s", to: shell("seq screenshot /tmp/seq_screenshot.png && open /tmp/seq_screenshot.png") },
       ],
-      // { from: "w", to: km("arc: wikipedia") },
-      // { from: "u", to: km("arc: upstash") },
-      // { from: "i", to: km("arc: tiktok.com") },
-      // { from: "p", to: km("arc: glass.photo") },
-      // { from: "a", to: km("arc: amazon") },
-      // { from: "s", to: km("arc: etsy") },
-      // { from: "h", to: km("arc: news.ycombinator.com") },
-      // { from: "j", to: km("arc: threads.com") },
-      // { from: "k", to: km("arc: farcaster") },
-      // { from: "l", to: km("arc: bluesky") },
-      // { from: "semicolon", to: km("arc: twitch") },
-      // { from: "quote", to: km("arc: strava") },
-      // { from: "b", to: km("arc: lobsters") },
-      // { from: "n", to: km("arc: pinterest.com") },
-      // { from: "m", to: km("arc: cosmos.co") },
-      // { from: "period", to: km("arc: substack.com") },
-      // { from: "slash", to: km("arc: alltrails") },
-      // { from: "spacebar", to: km("arc: linkedin.com") },
     },
 
-    // u-mode: sites
     {
       description: "ukey (sites)",
       layer: "u-mode",
@@ -851,29 +727,12 @@ export default {
       ],
     },
 
-    // y-mode: gh workspaces
     {
-      description: "ykey (gh workspaces)",
+      description: "ykey (gh workspaces, disabled)",
       layer: "y-mode",
-      mappings: [
-        { from: "w", to: cursor("workos-gh") },
-        { from: "i", to: cursor("builder-gh") },
-        { from: "u", to: cursor("mycloudkit-gh") },
-        { from: "o", to: cursor("leptos-gh") },
-        { from: "p", to: cursor("spark-gh") },
-        { from: "h", to: cursor("authkit-gh") },
-        { from: "f", to: cursor("ffmpeg-gh") },
-        { from: "k", to: cursor("kanidm-gh") },
-        { from: "l", to: cursor("litellm-gh") },
-        { from: "semicolon", to: cursor("markdoc-gh") },
-        { from: "b", to: cursor("obs-studio-gh") },
-        { from: "n", to: cursor("ferron-gh") },
-        { from: "m", to: cursor("axum-gh") },
-        { from: "period", to: cursor("solidis-gh") },
-      ],
+      mappings: [],
     },
 
-    // i-mode: symbols
     {
       description: "ikey (symbols)",
       layer: "i-mode",
@@ -926,7 +785,6 @@ export default {
       ],
     },
 
-    // o-mode: things
     {
       description: "okey (things)",
       layer: "o-mode",
@@ -941,65 +799,27 @@ export default {
         { from: "e", to: seqSocket("arc: vercel.com") },
         { from: "spacebar", to: seqSocket("arc: railway.com") },
       ],
-      // { from: "d", to: km("arc: yandex.cloud") },
-      // { from: "s", to: km("arc: jazz inspector") },
-      // { from: "z", to: km("arc: deepseek") },
     },
 
-    // p-mode: zed paths
     {
       description: "pkey (zed)",
       layer: "p-mode",
       mappings: [
         { from: "a", to: zed("~/repos/ziglang/zig") },
-        // { from: "a", to: zed("~/repos/ziglang/zig") },
       ],
     },
 
-    // open-bracket-mode: gh workspaces
     {
-      description: "openBracketKey (gh workspaces)",
+      description: "openBracketKey (gh workspaces, disabled)",
       layer: "open-bracket-mode",
-      mappings: [
-        { from: "w", to: cursor("tldraw-gh") },
-        { from: "e", to: cursor("electric-gh") },
-        { from: "r", to: cursor("rive-gh") },
-        { from: "t", to: cursor("stripe-gh") },
-        { from: "u", to: cursor("kunkun-gh") },
-        { from: "i", to: cursor("vite-gh") },
-        { from: "o", to: cursor("solid-gh") },
-        { from: "s", to: cursor("liveblocks-gh") },
-        { from: "f", to: cursor("codemirror-gh") },
-        { from: "g", to: cursor("pglite-gh") },
-        { from: "j", to: cursor("laminar-gh") },
-        { from: "k", to: cursor("kunkun-gh") },
-        { from: "z", to: cursor("zero-gh") },
-        { from: "x", to: cursor("axiom-gh") },
-        { from: "v", to: cursor("devenv-gh") },
-        { from: "b", to: cursor("tinybase-gh") },
-        { from: "n", to: cursor("instantdb-gh") },
-        { from: "m", to: cursor("automerge-gh") },
-        { from: "spacebar", to: cursor("lightning-ai-gh") },
-      ],
+      mappings: [],
     },
-
-    // close-bracket-mode: gh workspaces
     {
       description: "closeBracketKey (gh workspaces)",
       layer: "close-bracket-mode",
-      mappings: [
-        { from: "w", to: cursor("wrpc-gh") },
-        { from: "e", to: cursor("muscle-mem-gh") },
-        { from: "r", to: cursor("stack-error-rs-gh") },
-        { from: "a", to: cursor("nats-gh") },
-        { from: "s", to: cursor("timescale-gh") },
-        { from: "d", to: cursor("wit-deps-gh") },
-        { from: "f", to: cursor("kafka-gh") },
-        { from: "spacebar", to: cursor("river-gh") },
-      ],
+      mappings: [],
     },
 
-    // a-mode: ctrl
     {
       description: "akey (ctrl)",
       layer: "a-mode",
@@ -1068,9 +888,8 @@ export default {
       ],
     },
 
-    // d-mode: mouse/media
     {
-      description: "dkey (mouse)",
+      description: "dkey (mouse/media)",
       layer: "d-mode",
       mappings: [
         { from: "v", to: { pointing_button: "button1" } },
@@ -1088,7 +907,6 @@ export default {
         //   from: "a",
         //   to: { key: "9", modifiers: ["left_command", "left_control"] },
         // },
-        { from: "a", to: seqSocket("Move selection to LM Studio") },
         { from: "s", to: alfred("nikiv.dev.flow", "current_windows_of_app") },
         {
           from: "f",
@@ -1098,6 +916,7 @@ export default {
         { from: "j", to: seqSocket("arc: cloudflare.com") },
         { from: "k", to: "vk_consumer_play" },
         { from: "l", to: "vk_consumer_next" },
+        // { from: "semicolon", to: openApp("Spotify (or search)") },
         // { from: "semicolon", to: openApp("Spotify (or search)") },
         { from: "semicolon", to: seqSocket("open: Spotify (or search)") },
         { from: "n", to: "volume_decrement" },
@@ -1119,7 +938,6 @@ export default {
       ],
     },
 
-    // f-mode: essential
     {
       description: "fkey (essential)",
       layer: "f-mode",
@@ -1134,7 +952,7 @@ export default {
         { from: "r", to: km("Centre mouse to active app") },
         { from: "tab", to: openApp("tldraw") },
         { from: "a", to: openApp("Google Chrome Canary") },
-        { from: "s", to: openApp("Codex") },
+        { from: "s", to: openApp("Eagle") },
         { from: "d", to: openApp("ChatGPT") },
         // do: breaks
         // {
@@ -1145,7 +963,11 @@ export default {
         //   },
         // },
         // { from: "h", to: km("open: Focus") }, // todo: move this to 1focus proper
-        { from: "g", to: openApp("Discord (in Arc)") }, // todo: move prob
+        {
+          from: "g",
+          to: openApp("Discord (in Arc)"),
+          note: "Open Discord in Arc; this binding is likely temporary.",
+        },
         { from: "h", to: seqSocket("telegram: nikivdev (chat)") },
         // do: move r+space to smth else
         { from: "j", to: openApp("Preview") },
@@ -1179,7 +1001,12 @@ export default {
         { from: "i", to: seqSocket("telegram: nikivdev") },
         {
           from: "o",
-          to: [openApp("Arc"), keystroke("ctrl+1"), keystroke("cmd+6")],
+          to: seq(
+            "open x.com front page in Arc",
+            [openApp("Arc"), keystroke("ctrl+1"), keystroke("cmd+6")],
+            { waitFrontmostMs: 1800, appSettleMs: 20, eagerKeystrokes: true },
+          ),
+          note: "Open x.com front page in Arc (focus tab 1, then trigger cmd+6).",
         },
         {
           from: "z",
@@ -1191,13 +1018,12 @@ export default {
         { from: "n", to: seqSocket("arc: grok.com/imagine") },
         { from: "m", to: seqSocket("arc: aistudio.google.com") },
         { from: "period", to: seqSocket("arc: grok.com") },
-        { from: "spacebar", to: openApp("Eagle") },
+        { from: "spacebar", to: openApp("Simulator") },
       ],
     },
 
-    // g-mode: actions/window management
     {
-      description: "gkey (actions)",
+      description: "gkey (actions/window)",
       layer: "g-mode",
       mappings: [
         {
@@ -1297,46 +1123,10 @@ export default {
       ],
     },
 
-    // escape-mode: sites
-    {
-      description: "capskey",
-      layer: "escape-mode",
-      mappings: [
-        { from: "q", to: seqSocket("arc: console.groq.com") },
-        { from: "w", to: seqSocket("arc: axiom.co") },
-        { from: "e", to: seqSocket("arc: sentry.com") }, // do: move
-        { from: "r", to: seqSocket("arc: dodopayments.com") },
-        { from: "t", to: seqSocket("arc: stripe.com") },
-        { from: "i", to: seqSocket("arc: lovable.dev") },
-        { from: "o", to: seqSocket("arc: openrouter.ai") },
-        { from: "s", to: seqSocket("arc: aws.amazon.com") },
-        { from: "d", to: seqSocket("arc: daytona.com") },
-        { from: "f", to: seqSocket("arc: maps.google.com") },
-        { from: "h", to: seqSocket("arc: clickhouse") },
-        { from: "j", to: seqSocket("arc: primeintellect.ai") },
-        { from: "k", to: seqSocket("arc: modal.com") },
-        { from: "l", to: seqSocket("arc: huggingface.com") },
-        { from: "semicolon", to: seqSocket("arc: leap.new") },
-        { from: "c", to: seqSocket("arc: cloud.cerebras.ai") },
-        { from: "v", to: seqSocket("arc: app.planetscale.com") },
-        { from: "n", to: seqSocket("arc: fal.ai") },
-        { from: "m", to: seqSocket("arc: hetzner.com") },
-        { from: "period", to: seqSocket("arc: expo") },
-        { from: "slash", to: seqSocket("arc: resend.com") },
-        { from: "spacebar", to: seqSocket("arc: console.cloud.google.com") },
-      ],
-      // { from: "t", to: km("arc: tinker-console.thinkingmachines.ai") },
-    },
-
-    // tilde-mode: pastes and sites
     {
       description: "tilkey ()",
       layer: "tilde-mode",
       mappings: [
-        { from: "q", to: paste("personal nikita@ email") },
-        { from: "w", to: paste("personal nikita.vo@ email") },
-        { from: "e", to: enter("explain") },
-        { from: "i", to: paste("Cal.com (15 min)") },
         {
           from: "o",
           to: {
@@ -1344,199 +1134,119 @@ export default {
             modifiers: ["left_control", "left_shift", "left_command"],
           },
         },
-        { from: "a", to: enter("address all issues") },
-        { from: "s", to: enter("what to run next?") },
-        { from: "d", to: paste("what flow.toml task to run ") },
-        { from: "f", to: paste("create flow.toml task ") },
         { from: "h", to: km("New KM global macro") },
         { from: "j", to: km("Test") },
         { from: "k", to: km("Go to test macro") },
         { from: "l", to: alfred("run", "iansinnott.keyboardmaestro") },
         { from: "semicolon", to: raycast("loris/safari/search-history") },
         { from: "c", to: seqSocket("arc: dashboard.electric-sql.cloud") },
-        { from: "v", to: paste("need hive agent ") }, // todo: better
-        {
-          from: "b",
-          to: paste("todo: better"),
-        },
-        {
-          from: "n",
-          to: paste("todo: "),
-        },
-        {
-          from: "m",
-          to: km(
-            "paste: create flow.toml task for this and tell me what to run",
-          ),
-        },
         { from: "b", to: seqSocket("arc: reddit.com (upvotes)") },
-        { from: "comma", to: enter("write docs/how-it-works.md") },
         { from: "period", to: seqSocket("arc: x.com (bookmarks)") },
         { from: "slash", to: seqSocket("arc: x.com (likes)") },
-        { from: "left_command", to: paste("create cmd in flow where ") },
       ],
     },
 
-    // z-mode: communication
     {
-      description: "zkey ()",
+      description: "zkey (ai agent)",
       layer: "z-mode",
       mappings: [
-        { from: "w", to: km("Create new contact") },
-        { from: "e", to: km("New Spark email") },
-        { from: "f", to: openApp("Spark") },
-        { from: "j", to: seqSocket("arc: gmail.com") },
-        { from: "k", to: openApp("Simulator") },
-        { from: "l", to: openApp("zoom.us") },
-        // { from: "l", to: seqSocket("arc: localhost:linsa") },
-        {
-          from: "semicolon",
-          to: raycast("raycast/emoji-symbols/search-emoji-symbols"),
-        },
-        // { from: "v", to: seqSocket("arc: drive.google.com") },
-        // { from: "n", to: km("New X dm") }, // todo: make fast via arc site (for now)
-        { from: "spacebar", to: seqSocket("arc: v0.app") },
+        { from: "q", to: seqAgentFromClipboard(), note: "AI agent on clipboard" },
+        { from: "w", to: seqScreenshotOpen(), note: "Screenshot for AI" },
+        { from: "r", to: paste("yes"), note: "Confirm" },
+        { from: "t", to: paste("no"), note: "Deny" },
+        { from: "j", to: linWidget("~/config/i/kar/scripts/z-mode-widget.ts"), note: "Show z-mode layer" },
+        { from: "k", to: shell("bun run ~/config/i/kar/scripts/z-mode-update.ts --zero-latency"), note: "Update z-mode (zero-latency preview)" },
+        { from: "comma", to: paste("/review"), note: "Code review" },
+        { from: "period", to: paste("/test"), note: "Run tests" },
+        { from: "d", to: paste("/diff"), note: "Show diff" },
+        { from: "f", to: paste("/fix"), note: "Fix issue" },
+        { from: "g", to: paste("f deploy"), note: "flow: f deploy" },
+        { from: "h", to: paste("/help"), note: "Help" },
+        { from: "l", to: enter("/clear"), note: "Clear context" },
+        { from: "y", to: paste("f test"), note: "flow: f test" },
+        { from: "2", to: paste("f release-build"), note: "flow: f release-build" },
+        { from: "semicolon", to: paste("/plan"), note: "Plan mode" },
+        { from: "slash", to: openAppToggle("Arc"), note: "Toggle Arc" },
+        { from: "p", to: paste("/commit"), note: "Commit" },
+        { from: "n", to: enter("/new"), note: "New session" },
+        { from: "m", to: enter("study this codebase"), note: "Study codebase" },
+        { from: "b", to: paste("refactor this to be cleaner"), note: "Refactor prompt" },
+        { from: "v", to: paste("explain this error and fix it"), note: "Fix error prompt" },
+        { from: "c", to: openAppToggle("Claude"), note: "Toggle Claude" },
+        { from: "x", to: openAppToggle("Zed"), note: "Toggle Zed" },
+        { from: "1", to: openAppToggle("Things3"), note: "Toggle Things3" },
       ],
-      // { from: "spacebar", to: km("use ai") },
-      // { from: "period", to: km("arc: localhost:gitedit") },
-      // { from: "slash", to: km("arc: localhost:as") },
-      // { from: "n", to: km("arc: localhost:sb") },
-      // { from: "m", to: km("arc: localhost:la") },
-      // { from: "c", to: km("open: Chattti") },
-      // { from: "quote", to: km("arc: localhost:genx") },
-      // { from: "j", to: km("arc: localhost:gen") },
-      // { from: "k", to: km("arc: localhost:nikiv") },
-      // { from: "semicolon", to: km("arc: localhost:1f") },
     },
 
-    // x-mode: zed workspaces
     {
-      description: "xkey ()",
+      description: "xkey (zed workspaces)",
       layer: "x-mode",
       mappings: [
         { from: "i", to: zed("~/repos/ronin-co/hive") },
         { from: "o", to: zed("~/repos/tailwindlabs/tailwindcss") },
+        { from: "j", to: zed("~/repos/cocoindex-io/cocoindex") },
+        { from: "k", to: zed("~/repos/blackboardsh/electrobun") },
+        { from: "l", to: zed("~/repos/millionco/react-doctor") },
+        { from: "semicolon", to: zed("~/repos/zeroclaw-labs/zeroclaw") },
+        { from: "v", to: zed("~/repos/thelinuxlich/go-go-scope") },
         { from: "n", to: zed("~/repos/glushchenko/fsnotes") },
         { from: "m", to: zed("~/repos/ml-explore/mlx-lm") },
+        { from: "period", to: zed("~/repos/christopherkarani/Hive") },
         { from: "spacebar", to: zed("~/repos/mui/base-ui") },
       ],
-      // { from: "i", to: zed("") }, // todo: panda css
-      // { from: "slash", to: zed("~/code/x/nikiv-rise") },
-      // { from: "j", to: zed("~/code/org/1f/sdk/packages/rise") },
-      // { from: "semicolon", to: zed("~/code/org/linsa/base") },
-      // { from: "l", to: km("zed: LMCache") },
-      // { from: "k", to: km("zed: karabiner") },
     },
 
     {
       description: "ckey ()",
       layer: "c-mode",
       mappings: [
-        { from: "w", to: zed("~/repos/google/flax") },
+        { from: "w", to: zed("~/repos/sgl-project/sglang") },
         { from: "e", to: zed("~/repos/triton-lang/triton") },
         { from: "i", to: zed("~/repos/0xPlaygrounds/rig") },
         { from: "o", to: zed("~/repos/agno-agi/agno") },
         { from: "escape", to: zed("~/repos/google-deepmind/optax") },
-        { from: "a", to: zed("~/repos/vllm-project/vllm") },
-        { from: "s", to: zed("~/repos/sgl-project/sglang") },
+        { from: "a", to: zed("~/repos/tim-smart/lalph") },
+        { from: "s", to: zed("~/repos/vllm-project/vllm") },
         { from: "d", to: zed("~/repos/google/grain") },
         { from: "j", to: zed("~/repos/jax-ml/jax") },
-        { from: "k", to: zed("~/repos/PrimeIntellect-ai/verifiers") },
+        { from: "k", to: zed("~/repos/block/goose") },
         { from: "l", to: zed("~/repos/PrimeIntellect-ai/prime-rl") },
-        { from: "semicolon", to: zed("~/repos/antirez/qwen-asr") },
-        { from: "n", to: zed("~/repos/google-research/kauldron") },
+        { from: "semicolon", to: zed("~/repos/laude-institute/harbor") },
+        { from: "grave_accent_and_tilde", to: zed("~/repos/antirez/qwen-asr") },
+        { from: "z", to: zed("~/repos/google-research/kauldron") },
+        { from: "n", to: zed("~/repos/PrimeIntellect-ai/verifiers") },
         { from: "m", to: zed("~/code/lang/mojo") },
+        { from: "left_command", to: zed("~/repos/google/flax") },
         { from: "spacebar", to: zed("~/repos/pytorch/pytorch") },
         { from: "period", to: zed("~/repos/ml-explore/mlx") },
         { from: "slash", to: zed("~/repos/ml-explore/mlx-lm") },
       ],
-      // { from: "a", to: zed("~/repos/denoland/std") }, // do: move ~/repos/overengineeringstudio/effect-utils inside
-      // { from: "a", to: zed("~/repos/overengineeringstudio/effect-utils") },
-      // { from: "s", to: zed("~/repos/Effect-TS/effect") },
-      // { from: "d", to: zed("~/repos/TanStack/ai") },
-      // { from: "w", to: zed("~/repos/pg83/std") }, // do: cpp
-      // { from: "i", to: zed("~/code/lang/zig") },
-      // { from: "spacebar", to: zed("~/code/lang/py") },
-      // { from: "m", to: zed("~/repos/denoland/deno") },
-      // { from: "k", to: zed("~/code/lang/mbt") },
-      // { from: "b", to: zed("~/repos/obsproject/obs-studio") },
-      // { from: "slash", to: zed("~/code/lang/elixir") },
-      // { from: "slash", to: zed("~/code/lang/cpp") },
-      // todo: replace after once more stable and once we copy obs well
-      // { from: "period", to: zed("~/code/lang/cpp") },
-      // { from: "slash", to: zed("~/repos/obsproject/obs-studio") },
-      // { from: "w", to: km("warp: swift") },
-      // { from: "e", to: km("warp: ts") },
-      // { from: "i", to: km("warp: riplay") },
-      // { from: "o", to: km("warp: go") },
-      // { from: "escape", to: km("warp: train") }, // todo: moved to v+m in zed
-      // { from: "a", to: km("warp: py") },
-      // { from: "s", to: km("warp: config") },
-      // { from: "d", to: km("warp: lin-ios") },
-      // { from: "k", to: km("warp: new") },
-      // { from: "l", to: km("warp: linsa") },
-      // { from: "semicolon", to: km("warp: 1f") },
-      // { from: "n", to: km("warp: gitedit") },
-      // { from: "m", to: km("warp: glide") },
-      // { from: "period", to: km("warp: mbt") },
-      // { from: "spacebar", to: km("warp: infra") },
-      // { from: "spacebar", to: km("warp: x") },
-      // { from: "r", to: km("warp: try") },
-      // { from: "right_command", to: km("warp: mojo") },
-      // { from: "comma", to: km("warp: ai") },
-      // { from: "grave_accent_and_tilde", to: km("warp: focus") },
-      // { from: "quote", to: km("warp: genx") },
-      // { from: "f", to: km("warp: 1f-vscode") },
-      // { from: "tab", to: km("warp: cpp") },
-      // { from: "left_command", to: zed("~/code/org/1f/sdk") },
-      // { from: "h", to: zed("~/code/org/gen/train") },
-      // { from: "i", to: zed("~/repos/cloudflare/agents") },
-      // { from: "n", to: km("warp: lin") },
-      // { from: "semicolon", to: km("warp: flow") },
-      // { from: "n", to: zed("~/") },
-      // { from: "a", to: zed("~/repos/lisyarus/webgpu-raytracer") },
-      // { from: "q", to: km("zed: cpp") },
-      // { from: "w", to: km("zed: flow") },
-      // { from: "e", to: zed("~/lang/ts") },
-      // { from: "r", to: km("zed: try") },
-      // { from: "i", to: km("zed: glide") },
-      // { from: "o", to: km("zed: infra") },
-      // { from: "p", to: km("zed: riplay") },
-      // { from: "escape", to: km("zed: la") },
-      // { from: "a", to: km("zed: rust") },
-      // { from: "s", to: km("zed: train") },
-      // { from: "j", to: km("zed: lin") },
-      // { from: "k", to: km("zed: nikiv") },
-      // { from: "l", to: km("zed: linsa") },
-      // { from: "semicolon", to: km("zed: 1f") },
-      // { from: "quote", to: km("zed: genx") },
-      // { from: "grave_accent_and_tilde", to: km("zed: infra") },
-      // { from: "z", to: km("zed: py") },
-      // { from: "x", to: km("zed: xx") },
-      // { from: "n", to: km("zed: lin-ios") },
-      // { from: "m", to: km("zed: new") },
-      // { from: "comma", to: km("zed: ai") },
-      // { from: "period", to: km("zed: gitedit") },
-      // { from: "slash", to: km("zed: config") },
-      // { from: "left_command", to: km("zed: swift") },
-      // { from: "spacebar", to: km("zed: x") },
-      // { from: "right_command", to: km("zed: mojo") },
     },
 
-    // v-mode: search
     {
-      description: "vkey ()",
+      description: "vkey (search/workspaces)",
       layer: "v-mode",
       mappings: [
         { from: "w", to: zed("~/code/alfred") },
-        { from: "e", to: zed("~/code/org/linsa/base") }, // todo: include jazz here
-        { from: "r", to: zed("~/code/friendik") }, // do: start with search int tool or action
-        { from: "i", to: zed("~/repos/supabitapp/supacode") },
-        { from: "o", to: zed("~/repos/inline-chat/inline") }, // do: linsa mac
-        { from: "escape", to: zed("~/code/rise-app") },
+        { from: "e", to: zed("~/code/stream") },
+        {
+          from: "r",
+          to: zed("~/repos/raycast/extensions"),
+          note: "Raycast extensions workspace; planned path migration to ~/code/raycast/ext/raycast.",
+        },
+        { from: "i", to: zed("~/code/unhash") },
+        {
+          from: "o",
+          to: zed("~/code/org/gitedit/gitedit"),
+          note: "Gitedit workspace; migrate more VS Code-specific flows here over time.",
+        },
         { from: "a", to: zed("~/code/kar") },
         { from: "s", to: zed("~/code/seq") },
-        { from: "d", to: zed("~/code/zerg/ai") },
+        {
+          from: "d",
+          to: zed("~/code/org/gen/new"),
+          note: "Primary gen/new workspace, including training artifacts and data storage.",
+        },
         { from: "f", to: zed("~/code/infra") },
         { from: "h", to: zed("~/repos/alibaba/zvec") },
         {
@@ -1551,30 +1261,26 @@ export default {
         { from: "semicolon", to: zed("~/code/rise") },
         { from: "grave_accent_and_tilde", to: zed("~/code/telegram") },
         { from: "z", to: zed("~/repos/garden-co/jazz2") },
-        { from: "x", to: zed("~/repos/raycast/extensions") }, // todo: make it ~/code/raycast with /ext/raycast
-        { from: "n", to: zed("~/code/org/gen/new") },
-        { from: "m", to: zed("~/code/org/linsa/lin") },
-        { from: "left_command", to: zed("~/code/unhash") },
+        {
+          from: "x",
+          to: zed("~/repos/org/gen/genx"),
+          note: "Genx workspace (Hugging Face-aligned copy).",
+        },
+        {
+          from: "b",
+          to: zed("~/code/org/linsa/lin-ios"),
+          note: "lin-ios workspace; target is to consolidate under /lin.",
+        },
+        { from: "n", to: zed("~/code/org/linsa/lin") },
+        { from: "m", to: zed("~/code/org/linsa/linsa-mac") },
+        { from: "left_command", to: zed("~/code/zerg") },
         { from: "spacebar", to: zed("~/code/flow") },
         { from: "period", to: zed("~/code/myflow") },
-        { from: "slash", to: zed("~/code/org/gitedit/gitedit") }, // do: move more vscode things into gitedit (electron it later)
       ],
-      // { from: "w", to: zed("~/repos/onejs/on-zero") },
-      // { from: "slash", to: zed("~/code/org/1f/1f") },
-      // { from: "z", to: zed("~/code/org/1f/jazz") },
-      // { from: "x", to: zed("~/code/x") },
-      // { from: "b", to: zed("~/code/org/sb/sb") },
-      // { from: "slash", to: zed("~/code/org/la/la") },
-      // { from: "a", to: zed("~/code/nikiv") },
-      // { from: "b", to: zed("~/code/org/sb/sb") },
-      // { from: "r", to: zed("~/code/hatch") },
-      // { from: "spacebar", to: zed("~/config") }, // todo: move prob
-      // { from: "x", to: zed("~/code/x") },
     },
 
-    // b-mode: editing
     {
-      description: "bkey ()",
+      description: "bkey (zed workspaces)",
       layer: "b-mode",
       mappings: [
         { from: "e", to: zed("~/repos/tw93/Mole") },
@@ -1591,29 +1297,7 @@ export default {
         { from: "n", to: zed("~/repos/vercel/streamdown") },
         { from: "m", to: zed("~/repos/TanStack/router") },
         { from: "spacebar", to: zed("~/repos/polarsource/polar") },
-        { from: "period", to: zed("~/repos/tim-smart/lalph") },
       ],
-      // { from: "n", to: zed("~/repos/pqrs-org/Karabiner-Elements") },
-      // { from: "j", to: zed("~/code/jack") },
-      // { from: "h", to: km("edit: GitHub Bio") },
-      // {
-      //   from: "j",
-      //   to: linWidget("~/config/i/kar/widgets/sf-time.ts", { ttlMs: 2000 }),
-      // },
-      // { from: "k", to: km("open: Link") },
-      // {
-      //   from: "semicolon",
-      //   to: km("paste url of currently playing spotify song"),
-      // },
-      // { from: "period", to: km("paste currently playing spotify song") },
-      // stopped working so we made our own todo: remove
-      // {
-      //   from: "k",
-      //   to: alfred(
-      //     "list_windows_of_active_app",
-      //     "com.alfredapp.vitor.windowswitcher",
-      //   ),
-      // },
     },
 
     {
@@ -1627,96 +1311,68 @@ export default {
         { from: "5", to: { key: "5", modifiers: "left_option" } },
         { from: "6", to: { key: "6", modifiers: "left_option" } },
         // do: make smart
-        { from: "q", to: zed("~/code/nikiv/docs/journal/26-feb.mdx") },
+        { from: "q", to: zed("~/docs/journal/26-feb.mdx") },
         // do: make linsa-mac
         { from: "w", to: zed("~/code/org/1f/glide") },
         { from: "e", to: zed("~/code/org/la/la") },
-        { from: "r", to: zed("~/code/nikiv/docs/learn.mdx") },
-        { from: "escape", to: zed("~/code/nikiv/docs/health.mdx") },
-        { from: "a", to: zed("~/code/lang/ts") },
+        { from: "r", to: zed("~/docs/learn.mdx") },
+        { from: "escape", to: zed("~/docs/health.mdx") },
+        { from: "a", to: zed("~/code/lang/go") },
         { from: "s", to: zed("~/code/lang/swift") },
         { from: "d", to: zed("~/code/lang/rust") },
         { from: "f", to: zed("~/code/lang/py") },
+        // do: move
+        {
+          from: "semicolon",
+          to: zed("~/repos/moonbitlang/moon"),
+        },
         { from: "z", to: zed("~/repos/astral-sh/uv") },
-        { from: "c", to: zed("~/repos/ClickHouse/ClickHouse") },
-        { from: "v", to: zed("~/repos/Makisuo/maple") },
-        { from: "spacebar", to: zed("~/code/lang/go") },
+        {
+          from: "c",
+          to: zed("~/code/rise-app"),
+          note: "Rise app workspace; keep this aligned with current VS Code setup.",
+        },
+        {
+          from: "v",
+          to: zed("~/repos/Makisuo/maple"),
+          note: "Maple workspace; possible candidate for 1focus integration.",
+        },
+        { from: "left_command", to: zed("~/repos/openclaw/openclaw") },
+        { from: "spacebar", to: zed("~/code/lang/ts") },
       ],
-      // { from: "escape", to: zed("~/code/nikiv/docs/lessons.mdx") },
-      // { from: "b", to: zed("~/code/nikiv/docs/buy.mdx") },
-      // { from: "s", to: zed("~/code/nikiv/docs/habits.mdx") },
-      // { from: "d", to: zed("~/code/nikiv/docs/dev.mdx") },
-      // { from: "f", to: zed("~/code/nikiv/docs/focus.mdx") },
-      // { from: "tab", to: km("reflect: Grow") },
-      // { from: "q", to: km("reflect: Events") },
-      // { from: "w", to: km("Search Reflect") },
-      // { from: "e", to: km("reflect: Learn") },
-      // { from: "r", to: km("reflect: Raise") },
-      // { from: "t", to: km("reflect: Nutrition") },
-      // { from: "o", to: km("reflect: Jobs") },
-      // { from: "escape", to: km("reflect: Hire") },
-      // { from: "s", to: km("reflect: Health") },
-      // { from: "d", to: km("reflect: Read") },
-      // { from: "f", to: km("reflect: Focus") },
-      // { from: "g", to: km("reflect: Projects") },
-      // { from: "k", to: km("reflect: Music") },
-      // { from: "l", to: km("reflect: Photos") },
-      // { from: "semicolon", to: km("reflect: Family") },
-      // { from: "grave_accent_and_tilde", to: km("reflect: Invest") },
-      // { from: "z", to: km("reflect: Meet") },
-      // { from: "x", to: km("reflect: Pretty") },
-      // { from: "c", to: km("reflect: Costs") },
-      // { from: "v", to: km("reflect: Love") },
-      // { from: "b", to: km("reflect: Buy") },
-      // { from: "b", to: km("reflect: Buy") },
-      // { from: "left_command", to: km("reflect: Habits") },
-      // { from: "period", to: km("reflect: Move") },
-      // { from: "a", to: km("reflect: Plan") },
-      // { from: "a", to: km("reflect: Think") }, // todo: move this to glide better (bike + figma like thing)
     },
 
-    // m-mode: zed workspaces
     {
-      description: "mkey ()",
+      description: "mkey (zed workspaces)",
       layer: "m-mode",
       mappings: [
         { from: "q", to: zed("~/repos/tobi/qmd") },
         { from: "w", to: zed("~/repos/electron/electron") },
-        { from: "e", to: zed("~/repos/expo/expo") },
-        { from: "r", to: zed("~/repos/tailscale/tailscale") },
+        { from: "e", to: zed("~/repos/openai/codex") },
+        { from: "r", to: zed("~/repos/wannabespace/conar") },
         { from: "escape", to: zed("~/repos/batrachianai/toad") },
         { from: "a", to: zed("~/repos/badlogic/pi-mono") },
         { from: "s", to: zed("~/repos/jj-vcs/jj") },
-        { from: "d", to: zed("~/repos/openai/codex") },
-        { from: "f", to: zed("~/repos/nearai/ironclaw") },
-        { from: "k", to: zed("~/repos/rudrankriyam/App-Store-Connect-CLI") },
-        { from: "l", to: zed("~/repos/openclaw/openclaw") },
+        {
+          from: "d",
+          to: zed("~/repos/supabitapp/supacode"),
+          note: "Supacode workspace; revisit whether Friendik should cover this workflow.",
+        },
+        { from: "f", to: zed("~/repos/expo/expo") },
+        { from: "k", to: zed("~/repos/nearai/ironclaw") },
         { from: "semicolon", to: zed("~/repos/idursun/jjui") },
         { from: "grave_accent_and_tilde", to: zed("~/repos/banteg/takopi") },
         { from: "z", to: zed("~/repos/HazelChat/hazel") },
         { from: "x", to: zed("~/repos/GitoxideLabs/gitoxide") },
-        { from: "c", to: zed("~/repos/wannabespace/conar") },
+        { from: "c", to: zed("~/repos/tailscale/tailscale") },
         { from: "v", to: zed("~/repos/alchemy-run/alchemy") },
         { from: "b", to: zed("~/repos/steipete/bird") },
-        { from: "left_command", to: zed("~/repos/inline-chat/inline") },
-        { from: "spacebar", to: zed("~/repos/moonbitlang/moon") }, // includes moonbit code inside
+        { from: "spacebar", to: zed("~/repos/makepad/makepad") },
       ],
-      // { from: "slash", to: zed("~/repos/ekzhang/jax-js") },
-      // { from: "r", to: zed("~/code/kar") },
-      // { from: "escape", to: zed("~/repos/traefik/traefik") },
-      // { from: "spacebar", to: zed("~/code/nikiv/test.md") },
-      // { from: "a", to: zed("~/repos/tarantool/tarantool") },
-      // { from: "escape", to: zed("~/code/hatch") },
-      // { from: "s", to: zed("~/code/org/1f/sdk") },
-      // { from: "d", to: zed("~/repos/microsoft/vscode") },
-      // { from: "d", to: zed("~/repos/TanStack/router") },
-      // { from: "left_command", to: zed("") }, // todo: verifiers
-      // { from: "escape", to: zed("~/repos/typesense/typesense") },
     },
 
-    // dot-mode: zed workspaces
     {
-      description: "dotkey ()",
+      description: "dotkey (zed workspaces)",
       layer: "dot-mode",
       mappings: [
         { from: "w", to: zed("~/repos/reatom/reatom") },
@@ -1742,44 +1398,10 @@ export default {
         { from: "left_command", to: zed("~/repos/MoonshotAI/kimi-cli") },
         { from: "spacebar", to: zed("~/repos/zed-industries/zed") },
       ],
-      // { from: "l", to: zed("~/repos/overtake/TelegramSwift") },
-      // { from: "left_command", to: zed("~/code/zerg") },
-      // { from: "spacebar", to: zed("~/repos/antirez/flux2.c") },
-      // { from: "a", to: zed("~/code/org/1f/gen") },
-      // { from: "a", to: zed("~/repos/Effect-TS/effect") },
-      // { from: "t", to: zed("~/repos/midday-ai/midday") },
-      // { from: "escape", to: zed("~/repos/fuma-nama/fumadocs") },
-      // { from: "g", to: zed("~/repos/nanovms/ops") },
-      // { from: "c", to: zed("~/repos/tursodatabase/turso") },
-      // { from: "v", to: zed("~/repos/microsoft/vscode") },
-      // { from: "b", to: zed("~/repos/livestorejs/livestore") },
-      // { from: "left_command", to: zed("~/repos/NixOS/nix") },
-      // { from: "t", to: km("zed: tuist") },
-      // { from: "grave_accent_and_tilde", to: km("zed: opentinker") },
-      // { from: "z", to: km("zed: agno") },
-      // { from: "x", to: km("zed: electric") },
-      // { from: "x", to: km("zed: jax-js") },
-      // { from: "c", to: km("zed: llama.cpp") },
-      // { from: "v", to: km("zed: encore") },
-      // { from: "b", to: km("zed: obs") },
-      // { from: "v", to: zed("~/repos/pqrs-org/TrueWidget") },
-      // { from: "g", to: km("zed: gridchess") }, // todo: move to diff good key
-      // { from: "c", to: km("zed: sync") },
-      // { from: "v", to: km("zed: reatom") },
-      // { from: "b", to: km("warp: sb") },
-      //{ from: "q", to: km("zed: helix") },
-      // { from: "e", to: km("warp: raycast") },
-      // { from: "e", to: km("warp: alfred") },
-      // { from: "s", to: zed("~/x/scrape") },
-      //{ from: "d", to: km("zed: as") },
-      // { from: "d", to: km("zed: genx") },
-      // { from: "f", to: km("warp: friendik") },
-      //{ from: "f", to: km("warp: la") },
     },
 
-    // ts-mode: TypeScript snippets
     {
-      description: "tsdot",
+      description: "tsdot (ts snippets)",
       layer: "ts-mode",
       mappings: [
         {
@@ -1893,9 +1515,8 @@ export default {
       ],
     },
 
-    // go-mode: Go snippets
     {
-      description: "godot",
+      description: "godot (go snippets)",
       layer: "go-mode",
       mappings: [
         { from: "tab", to: seqSocket("w: GoDoc") },
@@ -2044,9 +1665,8 @@ export default {
       ],
     },
 
-    // py-mode: Python snippets
     {
-      description: "pydot",
+      description: "pydot (py snippets)",
       layer: "py-mode",
       mappings: [
         {
@@ -2071,9 +1691,8 @@ export default {
       ],
     },
 
-    // swift-mode: Swift snippets
     {
-      description: "swiftdot",
+      description: "swiftdot (swift snippets)",
       layer: "swift-mode",
       mappings: [
         {
@@ -2093,9 +1712,8 @@ export default {
       ],
     },
 
-    // rust-mode: Rust snippets
     // {
-    //   description: "rustdot",
+    //   description: "rustdot (rust snippets)",
     //   layer: "rust-mode",
     //   mappings: [
     //     {
@@ -2166,37 +1784,12 @@ export default {
     //   ],
     // },
 
-    // left-control-mode: gh workspaces
     {
-      description: "leftControlKey (gh workspaces)",
+      description: "leftControlKey (gh workspaces, disabled)",
       layer: "left-control-mode",
-      mappings: [
-        { from: "e", to: cursor("openai-evals-gh.") },
-        { from: "r", to: cursor("swift-subprocess-gh.") },
-        { from: "t", to: cursor("tiktoken-gh.") },
-        { from: "y", to: cursor("yt-dlp-gh.") },
-        { from: "u", to: cursor("just-gh.") },
-        { from: "i", to: cursor("sqlite-utils-gh.") },
-        { from: "a", to: cursor("optax-gh.") },
-        { from: "s", to: cursor("datasette-gh.") },
-        { from: "d", to: cursor("claude-coder-gh.") },
-        { from: "f", to: cursor("fish-gh.") },
-        { from: "h", to: cursor("helix-gh.") },
-        { from: "j", to: cursor("jj-gh.") },
-        { from: "k", to: cursor("scrapling-gh.") },
-        { from: "l", to: cursor("simonw-llm-gh.") },
-        { from: "semicolon", to: cursor("roo-code-gh.") },
-        { from: "c", to: cursor("claude-code-gh.") },
-        { from: "v", to: cursor("llvm-gh.") },
-        { from: "b", to: cursor("blender-gh.") },
-        { from: "n", to: cursor("tapnet-gh.") },
-        { from: "m", to: cursor("mujoco-warp-gh.") },
-        { from: "period", to: cursor("crawl4ai-gh.") },
-        { from: "spacebar", to: cursor("openai-realtime-agents-gh.") },
-      ],
+      mappings: [],
     },
 
-    // left-option-mode: linear
     {
       description: "leftOptionKey (linear)",
       layer: "left-option-mode",
@@ -2208,9 +1801,8 @@ export default {
       ],
     },
 
-    // spacebar-mode: screenshots & apps
     {
-      description: "spacekey",
+      description: "spacekey (screenshots/apps)",
       layer: "spacebar-mode",
       mappings: [
         {
@@ -2257,21 +1849,25 @@ export default {
         // { from: "o", to: openApp("X Feed (in Arc)") },
         {
           from: "o",
-          to: [openApp("Arc"), keystroke("ctrl+1"), keystroke("cmd+6")],
+          to: seq(
+            "open x.com front page in Arc",
+            [openApp("Arc"), keystroke("ctrl+1"), keystroke("cmd+6")],
+            { waitFrontmostMs: 1800, appSettleMs: 20, eagerKeystrokes: true },
+          ),
+          note: "Open x.com front page in Arc (focus tab 1, then trigger cmd+6).",
         },
         { from: "p", to: openApp("X profile (in Arc)") },
-        { from: "a", to: openApp("Safari Technology Preview") },
-        { from: "s", to: openApp("Arc") },
         {
-          from: "f",
+          from: "a",
           to: { key: "9", modifiers: ["left_command", "left_shift"] },
         },
+        { from: "s", to: openApp("Safari Technology Preview") },
+        { from: "d", to: openApp("Arc") },
+        { from: "f", to: openApp("Spark") },
         { from: "g", to: openUrlInApp("https://grokipedia.com", "Arc") },
         { from: "h", to: openApp("Codex Monitor") },
         { from: "j", to: openApp("Discord") },
         { from: "k", to: openApp("Dia") },
-        // { from: "k", to: openApp("Electron") },
-        { from: "k", to: openApp("~/code/org/linsa/linsa/build/app/node_modules/electron/dist/Electron.app") },
         { from: "l", to: openApp("Telegram") },
         { from: "semicolon", to: openApp("Slack") },
         {
@@ -2280,19 +1876,40 @@ export default {
         },
         { from: "z", to: openApp("IG Messages (in Arc)") },
         { from: "c", to: seqSocket("telegram: saved") },
-        { from: "m", to: seqSocket("X Messages (in Arc)") },
+        {
+          from: "m",
+          to: seq(
+            "open X Messages in Arc",
+            [openApp("Arc"), keystroke("ctrl+1"), keystroke("cmd+8")],
+            { waitFrontmostMs: 1800, appSettleMs: 20, eagerKeystrokes: true },
+          ),
+          note: "Open X Messages in Arc (focus tab 1, then trigger cmd+8).",
+        },
         { from: "comma", to: openUrlInApp("https://aistudio.google.com", "Arc") },
         { from: "period", to: openUrlInApp("https://colab.research.google.com", "Arc") },
-        { from: "slash", to: openUrlInApp("https://aistudio.google.com", "Arc") },
+        // { from: "slash", to: openUrlInApp("https://aistudio.google.com", "Arc") },
       ],
       // { from: "n", to: km("linear: Plan") },
     },
 
-    // slash-mode: zed paths
+    {
+      description: "spacekey (Dia links)",
+      layer: "spacebar-mode",
+      condition: { app: "^company\\.thebrowser\\.dia$" },
+      mappings: [
+        {
+          from: "n",
+          to: seqSocket("dia: save current url to docs"),
+          note: "In Dia, copy current URL (opt+cmd+c) and append it to ~/docs/nice-urls.mdx under ## Links.",
+        },
+      ],
+    },
+
     {
       description: "slashKey (zed)",
       layer: "slash-mode",
       mappings: [
+        { from: "w", to: zed("~/repos/SuperCmdLabs/SuperCmd") },
         { from: "e", to: zed("~/repos/mzau/mlx-knife") },
         { from: "s", to: zed("~/repos/Hmbown/aleph") },
         // { from: "f", to: zed("~/repos/alchemy-run/distilled-aws") },

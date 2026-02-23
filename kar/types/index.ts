@@ -175,6 +175,8 @@ export interface Simlayer {
   alone?: number
   /** Optional mode: hold (variable) or simultaneous (chord) */
   mode?: "hold" | "simultaneous"
+  /** Optional metadata/documentation field */
+  note?: string
 }
 
 // From key specification
@@ -229,6 +231,8 @@ export interface Mapping {
   to_if_alone?: ToKey
   /** Action when key is held down */
   to_if_held?: ToKey
+  /** Optional metadata/documentation field */
+  note?: string
 }
 
 // A rule containing multiple mappings
@@ -238,6 +242,8 @@ export interface Rule {
   layer?: string
   /** Condition for when this rule applies */
   condition?: Condition
+  /** Optional metadata/documentation field */
+  note?: string
   mappings: Mapping[]
 }
 
@@ -245,6 +251,8 @@ export interface Rule {
 export interface SimpleModification {
   from: KeyCode
   to: KeyCode
+  /** Optional metadata/documentation field */
+  note?: string
 }
 
 // Main config structure
@@ -419,20 +427,130 @@ export function seqSocket(
 
 function textCommandPayload(type: "paste_text" | "enter_text", text: string) {
   const legacyAction = type === "paste_text" ? "paste" : "enter"
+  const legacyName = `${legacyAction}: ${text}`
+  const legacyRunLine = `RUN ${legacyName}`
   return {
     v: 1,
     type,
     text,
+    // Extra aliases keep old bridge/parser versions working.
+    arg: text,
+    value: text,
+    name: legacyName,
+    command: legacyRunLine,
     // Compatibility fallback for older bridges that only understand line commands.
-    line: `RUN ${legacyAction}: ${text}`,
+    line: legacyRunLine,
   }
 }
 
-export function paste(text: string, endpoint?: string): { send_user_command: SendUserCommand } {
+function shifted(key: KeyCode): ToKey {
+  return { key, modifiers: "left_shift" }
+}
+
+function nativeKeyForChar(ch: string): ToKey | null {
+  if (ch >= "a" && ch <= "z") return ch as KeyCode
+  if (ch >= "A" && ch <= "Z") return shifted(ch.toLowerCase() as KeyCode)
+  if (ch >= "0" && ch <= "9") return ch as KeyCode
+
+  switch (ch) {
+    case " ":
+      return "spacebar"
+    case "\t":
+      return "tab"
+    case "\n":
+      return "return_or_enter"
+    case "-":
+      return "hyphen"
+    case "_":
+      return shifted("hyphen")
+    case "=":
+      return "equal_sign"
+    case "+":
+      return shifted("equal_sign")
+    case "[":
+      return "open_bracket"
+    case "{":
+      return shifted("open_bracket")
+    case "]":
+      return "close_bracket"
+    case "}":
+      return shifted("close_bracket")
+    case "\\":
+      return "backslash"
+    case "|":
+      return shifted("backslash")
+    case ";":
+      return "semicolon"
+    case ":":
+      return shifted("semicolon")
+    case "'":
+      return "quote"
+    case "\"":
+      return shifted("quote")
+    case "`":
+      return "grave_accent_and_tilde"
+    case "~":
+      return shifted("grave_accent_and_tilde")
+    case ",":
+      return "comma"
+    case "<":
+      return shifted("comma")
+    case ".":
+      return "period"
+    case ">":
+      return shifted("period")
+    case "/":
+      return "slash"
+    case "?":
+      return shifted("slash")
+    case "!":
+      return shifted("1")
+    case "@":
+      return shifted("2")
+    case "#":
+      return shifted("3")
+    case "$":
+      return shifted("4")
+    case "%":
+      return shifted("5")
+    case "^":
+      return shifted("6")
+    case "&":
+      return shifted("7")
+    case "*":
+      return shifted("8")
+    case "(":
+      return shifted("9")
+    case ")":
+      return shifted("0")
+    default:
+      return null
+  }
+}
+
+function nativeKeystrokesForText(text: string): ToKey[] | null {
+  // Fast-path only for US keyboard ASCII-like characters.
+  // If any character is unsupported, caller should fall back to seq paste/enter.
+  const out: ToKey[] = []
+  for (const ch of Array.from(text)) {
+    const key = nativeKeyForChar(ch)
+    if (!key) return null
+    out.push(key)
+  }
+  return out
+}
+
+export function paste(text: string, endpoint?: string): ToKey {
+  const native = nativeKeystrokesForText(text)
+  if (native && native.length > 0) return native
+  if (native && native.length === 0) return "vk_none"
   return sendUserCommand(textCommandPayload("paste_text", text), endpoint)
 }
 
-export function enter(text: string, endpoint?: string): { send_user_command: SendUserCommand } {
+export function enter(text: string, endpoint?: string): ToKey {
+  const native = nativeKeystrokesForText(text)
+  if (native && native.length > 0) return [...native, "return_or_enter"]
+  if (native && native.length === 0) return "return_or_enter"
   return sendUserCommand(textCommandPayload("enter_text", text), endpoint)
 }
 
