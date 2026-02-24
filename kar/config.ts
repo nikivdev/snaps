@@ -22,12 +22,13 @@ import {
 const useSeqSocket = true
 const debugSimJK = false
 
-// Force this macro to compile as a seq "sequence" (open_app + keystroke),
-// not open_url about:blank. This avoids race conditions where cmd+t lands in
-// the previous app before Safari becomes frontmost.
-const _seqMacroDefs = [
-  seq("open Safari new tab", [openApp("Safari"), keystroke("cmd+t")]),
-]
+const safariNewTab = seq("open Safari new tab", [openApp("Safari"), keystroke("cmd+t")], {
+  waitFrontmostMs: 2200,
+  appSettleMs: 25,
+  eagerKeystrokes: false,
+})
+
+const _seqMacroDefs = [safariNewTab]
 
 // Cursor GH workspaces are noisy and easy to accidentally trigger.
 // Keep them disabled until we migrate them to seq-native primitives.
@@ -40,11 +41,7 @@ function cursor(name: string) {
 export default {
   profile: {
     alone: 80,
-    // Keep explicit simultaneous chords snappy (avoid perceptible delay on normal typing).
-    // 30ms is too strict for jk on many keyboards and falls through to single-key mappings
-    // (e.g. k -> Safari). Use a still-low but reliable threshold.
-    // Simlayers use their own per-layer thresholds (usually 170ms).
-    sim: 80,
+    sim: 50,
   },
 
   simple: [{ from: "caps_lock", to: "escape" }],
@@ -241,17 +238,17 @@ export default {
       mappings: [
         {
           from: ["j", "k"],
+          parameters: { simultaneous_threshold_ms: 40 },
           to: debugSimJK
             ? shell(`echo "jk $(date +%s%3N)" >> /tmp/kar-sim.log`)
             : seqSocket("open Safari new tab"),
-          note: "Open Safari new tab via seq daemon.",
         },
         {
           from: ["k", "j"],
+          parameters: { simultaneous_threshold_ms: 40 },
           to: debugSimJK
             ? shell(`echo "kj $(date +%s%3N)" >> /tmp/kar-sim.log`)
             : seqSocket("open Safari new tab"),
-          note: "Same as j+k via seq daemon.",
         },
         // { from: ["k", "n"], to: seqSocket("open Comet new tab") },
         { from: ["k", "m"], to: seqSocket("New Linear task") },
@@ -607,13 +604,13 @@ export default {
         { from: "j", to: openApp("Ghostty") },
         { from: "k", to: openApp("Safari") },
         { from: "l", to: openApp("Zed Preview") },
-        { from: "semicolon", to: openApp("Cursor") },
+        { from: "semicolon", to: openApp("Repo Prompt") },
         { from: "quote", to: openApp("JuxtaCode") },
         { from: "c", to: openApp("OrbStack") },
         { from: "v", to: openApp("TablePlus") },
         { from: "b", to: openApp("Conar") },
         { from: "n", to: openApp("Rise") },
-        { from: "m", to: openApp("Repo Prompt") },
+        { from: "m", to: openApp("Cursor") },
         { from: "period", to: openApp("Yaak") },
         { from: "slash", to: openApp("Sublime Merge") },
         { from: "left_command", to: zed("~/config/fish/fn.fish") },
@@ -1004,7 +1001,7 @@ export default {
           to: seq(
             "open x.com front page in Arc",
             [openApp("Arc"), keystroke("ctrl+1"), keystroke("cmd+6")],
-            { waitFrontmostMs: 1800, appSettleMs: 20, eagerKeystrokes: true },
+            { waitFrontmostMs: 1800, appSettleMs: 20, eagerKeystrokes: false },
           ),
           note: "Open x.com front page in Arc (focus tab 1, then trigger cmd+6).",
         },
@@ -1200,12 +1197,12 @@ export default {
       description: "ckey ()",
       layer: "c-mode",
       mappings: [
-        { from: "w", to: zed("~/repos/sgl-project/sglang") },
-        { from: "e", to: zed("~/repos/triton-lang/triton") },
+        { from: "w", to: zed("~/repos/ml-explore/mlx") },
+        { from: "e", to: zed("~/repos/ml-explore/mlx-lm") },
         { from: "i", to: zed("~/repos/0xPlaygrounds/rig") },
         { from: "o", to: zed("~/repos/agno-agi/agno") },
         { from: "escape", to: zed("~/repos/google-deepmind/optax") },
-        { from: "a", to: zed("~/repos/tim-smart/lalph") },
+        { from: "a", to: zed("~/repos/sgl-project/sglang") },
         { from: "s", to: zed("~/repos/vllm-project/vllm") },
         { from: "d", to: zed("~/repos/google/grain") },
         { from: "j", to: zed("~/repos/jax-ml/jax") },
@@ -1216,10 +1213,9 @@ export default {
         { from: "z", to: zed("~/repos/google-research/kauldron") },
         { from: "n", to: zed("~/repos/PrimeIntellect-ai/verifiers") },
         { from: "m", to: zed("~/code/lang/mojo") },
+        { from: "period", to: zed("~/repos/triton-lang/triton") },
         { from: "left_command", to: zed("~/repos/google/flax") },
         { from: "spacebar", to: zed("~/repos/pytorch/pytorch") },
-        { from: "period", to: zed("~/repos/ml-explore/mlx") },
-        { from: "slash", to: zed("~/repos/ml-explore/mlx-lm") },
       ],
     },
 
@@ -1227,13 +1223,14 @@ export default {
       description: "vkey (search/workspaces)",
       layer: "v-mode",
       mappings: [
-        { from: "w", to: zed("~/code/alfred") },
-        { from: "e", to: zed("~/code/stream") },
         {
-          from: "r",
+          from: "q",
           to: zed("~/repos/raycast/extensions"),
           note: "Raycast extensions workspace; planned path migration to ~/code/raycast/ext/raycast.",
         },
+        { from: "w", to: zed("~/code/alfred") },
+        { from: "e", to: zed("~/repos/tim-smart/lalph") },
+        { from: "r", to: zed("~/code/stream") },
         { from: "i", to: zed("~/code/unhash") },
         {
           from: "o",
@@ -1846,13 +1843,12 @@ export default {
         },
         { from: "t", to: openUrlInApp("https://github.com/nikivdev", "Safari") },
         { from: "i", to: openApp("Reader") },
-        // { from: "o", to: openApp("X Feed (in Arc)") },
         {
           from: "o",
           to: seq(
             "open x.com front page in Arc",
             [openApp("Arc"), keystroke("ctrl+1"), keystroke("cmd+6")],
-            { waitFrontmostMs: 1800, appSettleMs: 20, eagerKeystrokes: true },
+            { waitFrontmostMs: 1800, appSettleMs: 20, eagerKeystrokes: false },
           ),
           note: "Open x.com front page in Arc (focus tab 1, then trigger cmd+6).",
         },
@@ -1881,7 +1877,7 @@ export default {
           to: seq(
             "open X Messages in Arc",
             [openApp("Arc"), keystroke("ctrl+1"), keystroke("cmd+8")],
-            { waitFrontmostMs: 1800, appSettleMs: 20, eagerKeystrokes: true },
+            { waitFrontmostMs: 1800, appSettleMs: 20, eagerKeystrokes: false },
           ),
           note: "Open X Messages in Arc (focus tab 1, then trigger cmd+8).",
         },
